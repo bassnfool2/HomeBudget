@@ -37,7 +37,7 @@ public class BudgetItem {
 		this.payday = payday;
 	}
 
-	public float getAmount() {
+	public Float getAmount() {
 		return amount;
 	}
 

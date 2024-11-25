@@ -22,6 +22,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -46,6 +47,7 @@ public class HomeBudgetController extends VBox  {
 	public static final int NEW_ADD = -1;
 	public Payee currentPayee = new Payee();
 	public Income currentIncome = new Income();
+	public Budget currentBudget = null;
     private static Connection conn = null;
     @FXML private TextField payeeNameTextField;
     @FXML private TextField payeeUsernameTextField;
@@ -71,19 +73,9 @@ public class HomeBudgetController extends VBox  {
     @FXML private TableColumn<Income, String> incomeNameTableColumn;
     @FXML private TableColumn<Income, String> incomePayFrequencyTableColumn;
     @FXML private TableColumn<Income, Float> incomeBudgetedAmountTableColumn;
+    @FXML private Tab budgetTab;
 
-    @FXML private TableView<BudgetRow> budgetTableView;
-    @FXML private TableColumn<BudgetRow, String> budgetPayeeTableColumn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday1TableColmn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday2TableColmn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday3TableColmn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday4TableColmn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday5TableColmn;
-    @FXML private TableColumn<BudgetRow, String> budgetPayday6TableColmn;
     
-    HashMap<Payee, Integer> payeeToRow = new HashMap<Payee, Integer>();
-    HashMap<Payday, Integer> paydayToColumn = new HashMap<Payday, Integer>();
-    ArrayList<BudgetRow> budgetRows = new ArrayList<BudgetRow>();
     public HomeBudgetController() {
 		URL fxmlLocation = HomeBudgetController.class.getResource("HomeBudget.fxml");
 		FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
@@ -98,20 +90,6 @@ public class HomeBudgetController extends VBox  {
 			e.printStackTrace();
 		}
 		try {
-			budgetPayeeTableColumn.setCellValueFactory(new PropertyValueFactory<>("payee"));
-			budgetPayday1TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem0"));
-			budgetPayday1TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
-			//budgetPayday1TableColmn.setCellFactory(EditableTableCell::new);
-			budgetPayday2TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem1"));
-			budgetPayday2TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
-			budgetPayday3TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem2"));
-			budgetPayday3TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
-			budgetPayday4TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem3"));
-			budgetPayday4TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
-			budgetPayday5TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem4"));
-			budgetPayday5TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
-			budgetPayday6TableColmn.setCellValueFactory(new PropertyValueFactory<>("budgetItem5"));
-			budgetPayday6TableColmn.setCellFactory(TextFieldTableCell.forTableColumn());
 			initDb("/home/ghobbs/Documents/zbudget.db");
 			incomePayfrequencyComboBox.getItems().setAll(PayFrequency.values());
 			loadPayees();
@@ -133,29 +111,12 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		rowConstraints.setPrefHeight(30);
 		ColumnConstraints columnConstraints = new ColumnConstraints();
 		columnConstraints.setPrefWidth(152);
-		budgetRows = new ArrayList<BudgetRow>();
 		// Add the row constraints to the grid pane
-		for ( Budget budget : Budget.getBudgets()) {
-			System.out.println("Budget date:"+budget.getDate());
-			int payeeindex = 0;
-			for ( Payee payee : Payee.getPayees()) {
-				payeeToRow.put(payee, payeeindex);
-				BudgetRow budgetRow = new BudgetRow(payee, budget.getPaydays());
-				budgetRows.add(budgetRow);
-				payeeindex++;
-			}
-			int paydayindex = 0;
-			for ( Payday payday : budget.getPaydays()) {
-				paydayToColumn.put(payday, paydayindex);
-				for ( BudgetItem budgetItem : payday.getBudgetItems()) {
-					budgetRows.get(payeeToRow.get(budgetItem.getPayee())).replaceBudgetItemAt(paydayindex, budgetItem);
-				}
-				paydayindex++;
-			}
-		}
-		ObservableList<BudgetRow> budgetData = FXCollections.observableList(budgetRows);
-		budgetTableView.setItems(budgetData);
-		budgetTableView.refresh();
+		Budget budget = Budget.getBudgets().get(0);
+		currentBudget = budget;
+		BudgetController budgetController = new BudgetController();
+		budgetController.setBudget(budget);
+		budgetTab.setContent(budgetController);
 		
 	}
 
@@ -272,7 +233,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 	
 	public void payeeSelected(MouseEvent event) {
-		int rowIndex = payeeTableView.getSelectionModel().getSelectedIndex();
+//		int rowIndex = payeeTableView.getSelectionModel().getSelectedIndex();
         //int columnIndex = payeeTableView.getColumns().indexOf(((TableView<Payee>)event.getSource()).getClickedColumn());
 
         // Handle the click event based on the row and column indices
@@ -284,7 +245,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
     }
 	
 	public void incomeSelected(MouseEvent event) {
-		int rowIndex = incomeTableView.getSelectionModel().getSelectedIndex();
+//		int rowIndex = incomeTableView.getSelectionModel().getSelectedIndex();
         //int columnIndex = payeeTableView.getColumns().indexOf(((TableView<Payee>)event.getSource()).getClickedColumn());
 
         // Handle the click event based on the row and column indices
@@ -323,17 +284,6 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 
 	public void saveBudget() throws Exception {
-		for ( BudgetRow budgetRow : budgetRows ) {
-			for ( BudgetItem budgetItem : budgetRow.grabBudgetItems()) {
-				if ( budgetItem.getAmount() != 0 && budgetItem.getId() == HomeBudgetController.NEW_ADD && budgetItem.getPayday() != null ) {
-					budgetItem.save();
-				} else if ( budgetItem.getPayday() != null ) {
-					budgetItem.save();
-				}
-			}
-			System.out.println(budgetRow.grabPayee().getName()+" ");
-		}
-		loadBudgets();
 	}
 
 	public class EditableTableCell extends TableCell<String, String> {
