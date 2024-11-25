@@ -34,6 +34,9 @@
          <VBox.margin>
             <Insets bottom="10.0" top="10.0" />
          </VBox.margin>
+         <padding>
+            <Insets left="20.0" />
+         </padding>
       </HBox>
       <HBox prefWidth="200.0">
          <children>
@@ -50,6 +53,9 @@
                </children>
             </VBox>
          </children>
+         <padding>
+            <Insets left="20.0" />
+         </padding>
       </HBox>
       <GridPane fx:id="grid" gridLinesVisible="true" maxWidth="300.0">
          <columnConstraints>
@@ -59,6 +65,9 @@
          <rowConstraints>
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
          </rowConstraints>
+         <padding>
+            <Insets left="20.0" />
+         </padding>
       </GridPane>
       <HBox prefWidth="200.0" spacing="4.0">
          <children>
@@ -68,7 +77,7 @@
             <Insets left="4.0" top="4.0" />
          </VBox.margin>
          <padding>
-            <Insets left="4.0" top="4.0" />
+            <Insets left="20.0" top="4.0" />
          </padding>
       </HBox>
    </children>

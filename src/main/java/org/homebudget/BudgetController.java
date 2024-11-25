@@ -2,6 +2,8 @@ package org.homebudget;
 
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -20,6 +22,7 @@ import javafx.scene.layout.VBox;
 
 public class BudgetController  extends VBox  {
     @FXML private GridPane grid;
+    @FXML private Label budgetHeadLabel;
 	Budget budget = null;
 	HashMap<Payee, Integer> payeeToRow = new HashMap<Payee, Integer>();
 	HashMap<Payday, Integer> paydayToColumn = new HashMap<Payday, Integer>();
@@ -41,6 +44,7 @@ public class BudgetController  extends VBox  {
 	
 	public void setBudget(Budget budget) throws Exception {
 		this.budget = budget;
+		budgetHeadLabel.setText(budget.getDate().toLocalDate().toString());
 		int paydayCount = budget.getPaydays().size();
 //		this.setWidth(paydayCount*150);
 		grid.setMaxWidth((paydayCount+1)*150);
