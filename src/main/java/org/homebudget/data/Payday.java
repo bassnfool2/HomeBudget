@@ -13,13 +13,15 @@ import org.homebudget.HomeBudgetController;
 public class Payday {
 	int id = HomeBudgetController.NEW_ADD;
 	Date date = Date.valueOf(LocalDate.now().plusMonths(1).withDayOfMonth(1));
-	Income income = null;
+	FundSource income = null;
+	Budget budget = null;
 	ArrayList<BudgetItem> budgetItems = new ArrayList<BudgetItem>();
 	
-	public Payday(int id, Date date, Income income) {
+	public Payday(int id, Budget budget, Date date, FundSource income) {
 		this.id = id;
 		this.date = date;
 		this.income = income;
+		this.budget = budget;
 	}
 
 	public Date getDate() {
@@ -33,7 +35,7 @@ public class Payday {
 		return id;
 	}
 
-	public Income getIncome() {
+	public FundSource getIncome() {
 		return income;
 	}
 
@@ -44,7 +46,7 @@ public class Payday {
 		return budgetItems;
 	}
 
-	public static ArrayList<Payday> load(Object parent) throws Exception {
+	public static ArrayList<Payday> load(Budget budget) throws Exception {
 		ArrayList<Payday> payDays = new ArrayList<Payday>();
 		Statement stmt = null;
 		ResultSet rset = null;
@@ -55,8 +57,8 @@ public class Payday {
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				Date date = rset.getDate("payDate");
-				Income income = Income.getIncome(rset.getInt("income_id"));
-				Payday payDay = new Payday(id, date, income);
+				FundSource income = FundSource.getFundSource(rset.getInt("income_id"));
+				Payday payDay = new Payday(id, budget, date, income);
 				payDays.add(payDay);
 			}
 			return payDays;
@@ -75,15 +77,17 @@ public class Payday {
 	public int insert() throws SQLException {
 		int i = 1;
 		final int PAYDATE = i++;
-		final int DATE = i++;
+		final int INCOME_ID = i++;
+		final int BUDGET_ID = i++;
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO payDay\n"
-					+ "(payDate, income_id)\n"
-					+ "VALUES(?,?)");
-			stmt.setDate(DATE, date);
-			stmt.setInt(i, DATE);
+					+ "(payDate, income_id, budget_id)\n"
+					+ "VALUES(?,?, ?)");
+			stmt.setDate(PAYDATE, date);
+			stmt.setInt(INCOME_ID, income.getId());
+			stmt.setInt(BUDGET_ID, budget.getId());
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			return updated;

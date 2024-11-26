@@ -33,11 +33,12 @@ public class Payee {
 	int dueOn = Payee.DEFAULT_DAY_DUE;
 	float defaultPaymentAmount = Payee.DEFAULT_AMOUNT_DUE;
 	float balance = Payee.DEFAULT_BALANCE;
+	FundSource paywithFundSource = null;
 	
 	public Payee() {
 		super();
 	}
-	public Payee(int id, String name, String url, String username, String password, int dueOn, float defaultPaymentAmount, float balance) {
+	public Payee(int id, String name, String url, String username, String password, int dueOn, float defaultPaymentAmount, float balance, FundSource fundSource) {
 		this();
 		this.id = id;
 		this.name = name;
@@ -47,6 +48,7 @@ public class Payee {
 		this.dueOn = dueOn;
 		this.defaultPaymentAmount = defaultPaymentAmount;
 		this.balance = balance;
+		this.paywithFundSource = fundSource;
 	}
 
 	public Integer getId() {
@@ -59,6 +61,14 @@ public class Payee {
 	public void setName(String name) {
 		this.name = name;
 	}
+	public FundSource getPaywithFundSource() {
+		return paywithFundSource;
+	}
+
+	public void setPaywithFundSource(FundSource paywithFundSource) {
+		this.paywithFundSource = paywithFundSource;
+	}
+
 	public String getUrl() {
 		return url;
 	}
@@ -98,13 +108,13 @@ public class Payee {
 		this.defaultPaymentAmount = defaultPaymentAmount;
 	}
 
-	public static void load() throws SQLException {
+	public static void load() throws Exception {
 		payees = new ArrayList<Payee>();
 		Statement stmt = null;
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().createStatement();
-			rset = stmt.executeQuery("select id, name, url, username, password, due_on, budgetedPayment, balance from payee order by name");
+			rset = stmt.executeQuery("select id, name, url, username, password, due_on, budgetedPayment, balance, income_id from payee order by name");
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				String name = rset.getString("name");
@@ -114,7 +124,8 @@ public class Payee {
 				Integer dueOn = rset.getInt("due_on");
 				Float budgetedPayment = rset.getFloat("budgetedPayment");
 				Float balance = rset.getFloat("balance");
-				Payee payee = new Payee(id, name, url, username, password, dueOn, budgetedPayment, balance);
+				FundSource paywithFundSource = rset.getInt("income_id") == 0 ? null : FundSource.getFundSource(rset.getInt("income_id"));
+				Payee payee = new Payee(id, name, url, username, password, dueOn, budgetedPayment, balance, paywithFundSource);
 				payees.add(payee);
 			}
 		} finally {
@@ -138,11 +149,11 @@ public class Payee {
 		final int DUE_ON = i++;
 		final int BUDGETED_PAYMENT = i++;
 		final int BALANCE = i++;
-		final int ID = i++;
+		final int INCOME_ID = i++;
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("insert into payee (name, url, username, password, due_on, budgetedPayment, balance) values (?, ?, ?, ?, ?, ?, ?)");
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("insert into payee (name, url, username, password, due_on, budgetedPayment, balance, income_id) values (?, ?, ?, ?, ?, ?, ?, ?)");
 			stmt.setString(NAME, name);
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
@@ -150,6 +161,7 @@ public class Payee {
 			stmt.setInt(DUE_ON, dueOn);
 			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
 			stmt.setFloat(BALANCE, balance);
+			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			return updated;
@@ -167,11 +179,12 @@ public class Payee {
 		final int DUE_ON = i++;
 		final int BUDGETED_PAYMENT = i++;
 		final int BALANCE = i++;
+		final int INCOME_ID = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("update payee set name = ?, url = ?, username=?, password=?, due_on=?, budgetedPayment=?, balance=? where id = ?");
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("update payee set name = ?, url = ?, username=?, password=?, due_on=?, budgetedPayment=?, balance=?, income_id=? where id = ?");
 			stmt.setString(NAME, name);
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
@@ -179,6 +192,7 @@ public class Payee {
 			stmt.setInt(DUE_ON, dueOn);
 			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
 			stmt.setFloat(BALANCE, balance);
+			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			stmt.setInt(ID, id);
 			return stmt.executeUpdate();
 			

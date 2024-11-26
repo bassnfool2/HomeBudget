@@ -38,24 +38,27 @@
             <Insets left="20.0" />
          </padding>
       </HBox>
-      <HBox prefWidth="200.0">
+      <HBox fx:id="gridHeaderHBox">
          <children>
             <Label alignment="BOTTOM_CENTER" maxWidth="150.0" prefHeight="70.0" prefWidth="150.0" text="Payees">
                <font>
                   <Font size="18.0" />
                </font>
             </Label>
-            <VBox maxWidth="150.0" prefWidth="150.0">
+            <VBox>
                <children>
                   <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="150.0" prefHeight="24.0" prefWidth="150.0" text="Payday 1" textAlignment="CENTER" />
-                  <Label alignment="CENTER" maxWidth="150.0" prefHeight="24.0" prefWidth="150.0" text="1/12/2024" />
-                  <Label alignment="CENTER" maxWidth="150.0" prefHeight="24.0" text="\$3500" />
+                  <Label alignment="CENTER" maxWidth="150.0" prefHeight="24.0" prefWidth="140.0" text="1/12/2024" />
+                  <Label alignment="CENTER" maxWidth="140.0" prefHeight="24.0" text="\$3500" />
                </children>
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
             </VBox>
          </children>
-         <padding>
+         <VBox.margin>
             <Insets left="20.0" />
-         </padding>
+         </VBox.margin>
       </HBox>
       <GridPane fx:id="grid" gridLinesVisible="true" maxWidth="300.0">
          <columnConstraints>

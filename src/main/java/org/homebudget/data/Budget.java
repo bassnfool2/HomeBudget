@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.homebudget.HomeBudgetController;
 
@@ -62,7 +64,7 @@ public class Budget {
 		try {
 			stmt = HomeBudgetController.getDbConnection().createStatement();
 			rset = stmt.executeQuery("SELECT id, budgetDate\n"
-					+ "FROM budget");
+					+ "FROM budget order by budgetDate");
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				Date date = rset.getDate("budgetDate");
@@ -88,7 +90,7 @@ public class Budget {
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO budget\n"
-					+ "(id, budgetDate)\n"
+					+ "(budgetDate)\n"
 					+ "VALUES(?)");
 			stmt.setDate(DATE, date);
 			int updated = stmt.executeUpdate();
@@ -116,7 +118,67 @@ public class Budget {
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}
-		
+
 	}
 	
+	public static Budget createNextBudget() throws Exception {
+		Budget budget = null;
+		if ( Budget.getBudgets().size() == 0) {
+			budget = new Budget(HomeBudgetController.NEW_ADD, Date.valueOf(getStartOfNextMonth()));
+			budget.save();
+			for ( FundSource fundSource : FundSource.getFundSources()) {
+				switch (fundSource.getPayFrequency()) {
+				case EVERY_TWO_WEEKS: 
+					getNextFundDrop2WeekInterval(fundSource, budget);
+					break;
+				case MONTHLY:
+					getNextFundDropMonthlyInterval(fundSource, budget);
+					break;
+				case TWICE_MONTHLY:
+					getNextFundDropTwiceMonthlyInterval(fundSource, budget);
+					break;
+				}
+			}
+			for ( Payee payee : Payee.getPayees()) {
+				LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn()-1);
+				for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
+					Payday payday = budget.getPaydays().get(i);
+					if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
+						if ( payday.getDate().before(Date.valueOf(payDueDate))) {
+							BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
+							budgetItem.save();
+							break;
+						}
+					}
+				}
+			}
+		}
+		return budget;
+	}
+	
+	private static void getNextFundDropTwiceMonthlyInterval(FundSource fundSource, Budget budget) throws SQLException {
+	}
+
+	private static void getNextFundDropMonthlyInterval(FundSource fundSource, Budget budget) throws SQLException {
+		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
+			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
+		}
+		Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource);
+		payday.save();		
+	}
+
+	private static void getNextFundDrop2WeekInterval(FundSource fundSource, Budget budget) throws SQLException {
+		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
+			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
+		}
+		while ( fundSource.getNextPayDate().before(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1))))  {
+			Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource);
+			payday.save();
+			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
+		}
+	}
+
+	public static LocalDate getStartOfNextMonth() {
+        return LocalDate.now().with(TemporalAdjusters.firstDayOfNextMonth());
+    }
 }

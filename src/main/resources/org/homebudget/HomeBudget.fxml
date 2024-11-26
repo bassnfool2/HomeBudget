@@ -47,8 +47,12 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <fx:root prefHeight="800.0" prefWidth="1000.0" type="VBox" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
   <children>
@@ -104,7 +108,73 @@
       </HBox>
       <TabPane prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab fx:id="budgetTab" text="Budget" />
+          <Tab fx:id="budgetTab" text="Budget">
+               <content>
+                  <VBox minHeight="400.0" minWidth="800.0">
+                     <children>
+                        <HBox prefWidth="200.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#previousBudget" text="&lt;&lt;">
+                                 <HBox.margin>
+                                    <Insets left="100.0" />
+                                 </HBox.margin>
+                              </Button>
+                              <Label prefHeight="24.0" text="Budget for:">
+                                 <padding>
+                                    <Insets left="10.0" />
+                                 </padding>
+                              </Label>
+                              <Label fx:id="budgetHeadLabel" prefHeight="24.0" text="Nov 2024">
+                                 <padding>
+                                    <Insets left="10.0" right="10.0" />
+                                 </padding>
+                              </Label>
+                              <Button fx:id="budgetNextButton" mnemonicParsing="false" onAction="#nextBudget" text="&gt;&gt;" />
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="10.0" top="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <HBox prefWidth="200.0">
+                           <children>
+                              <Label alignment="BOTTOM_CENTER" maxWidth="150.0" prefHeight="70.0" prefWidth="150.0" text="Payees">
+                                 <font>
+                                    <Font size="18.0" />
+                                 </font>
+                              </Label>
+                              <VBox maxWidth="150.0" prefWidth="150.0">
+                                 <children>
+                                    <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="150.0" prefHeight="24.0" prefWidth="150.0" text="Payday 1" textAlignment="CENTER" />
+                                    <Label alignment="CENTER" maxWidth="150.0" prefHeight="24.0" prefWidth="150.0" text="1/12/2024" />
+                                    <Label alignment="CENTER" maxWidth="150.0" prefHeight="24.0" text="\$3500" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <GridPane gridLinesVisible="true" maxWidth="300.0">
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                           </columnConstraints>
+                           <rowConstraints>
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                           </rowConstraints>
+                        </GridPane>
+                        <HBox prefWidth="200.0" spacing="4.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#saveBudget" text="Save Budget" />
+                           </children>
+                           <VBox.margin>
+                              <Insets left="4.0" top="4.0" />
+                           </VBox.margin>
+                           <padding>
+                              <Insets left="4.0" top="4.0" />
+                           </padding>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </content>
+          </Tab>
           <Tab text="Payees">
                <content>
                   <VBox>
@@ -125,7 +195,7 @@
                                     <Insets />
                                  </HBox.margin>
                                  <padding>
-                                    <Insets left="8.0" />
+                                    <Insets left="20.0" />
                                  </padding>
                               </Label>
                               <TextField fx:id="payeeNameTextField" prefHeight="24.0" prefWidth="293.0" promptText="[Payee Name]">
@@ -133,10 +203,8 @@
                                     <Insets />
                                  </opaqueInsets>
                               </TextField>
-                              <Label prefHeight="24.0" text="Username" />
-                              <TextField fx:id="payeeUsernameTextField" prefHeight="24.0" prefWidth="251.0" promptText="[Username]" />
-                              <Label prefHeight="24.0" text="Password" />
-                              <PasswordField fx:id="payeePasswordField" prefHeight="24.0" prefWidth="241.0" promptText="[Password]" />
+                              <Label prefHeight="24.0" text="Pay with" />
+                              <ComboBox fx:id="payeeIncomeComboBox" prefHeight="24.0" prefWidth="557.0" promptText="[Income Source to pay with]" />
                            </children>
                            <opaqueInsets>
                               <Insets left="4.0" />
@@ -148,6 +216,20 @@
                               <Insets left="4.0" />
                            </padding>
                         </HBox>
+                        <HBox prefWidth="200.0">
+                           <children>
+                              <Label prefHeight="24.0" text="Username" />
+                              <TextField fx:id="payeeUsernameTextField" prefHeight="24.0" prefWidth="251.0" promptText="[Username]" />
+                              <Label prefHeight="24.0" text="Password">
+                                 <padding>
+                                    <Insets left="45.0" />
+                                 </padding></Label>
+                              <PasswordField fx:id="payeePasswordField" prefHeight="24.0" prefWidth="241.0" promptText="[Password]" />
+                           </children>
+                           <padding>
+                              <Insets left="4.0" top="4.0" />
+                           </padding>
+                        </HBox>
                         <HBox prefWidth="200.0" spacing="4.0">
                            <padding>
                               <Insets left="4.0" top="4.0" />
@@ -155,16 +237,19 @@
                            <children>
                               <Label prefHeight="24.0" text="URL" textAlignment="RIGHT">
                                  <padding>
-                                    <Insets left="25.0" />
+                                    <Insets left="37.0" />
                                  </padding>
                               </Label>
-                              <TextField fx:id="payeeUrlTextField" prefHeight="24.0" prefWidth="930.0" promptText="[URL]" />
+                              <TextField fx:id="payeeUrlTextField" prefHeight="24.0" prefWidth="926.0" promptText="[URL]" />
                            </children>
                         </HBox>
                         <HBox prefWidth="200.0" spacing="4.0">
                            <children>
-                              <Label prefHeight="24.0" text="Due on" />
-                              <TextField fx:id="payeeDueOnTextField" prefHeight="24.0" prefWidth="276.0" promptText="[Day of Month payment is due]" />
+                              <Label prefHeight="24.0" text="Due on">
+                                 <padding>
+                                    <Insets left="11.0" />
+                                 </padding></Label>
+                              <TextField fx:id="payeeDueOnTextField" prefHeight="24.0" prefWidth="226.0" promptText="[Day of Month payment is due]" />
                               <Label prefHeight="24.0" text="Budgeted Payment" />
                               <TextField fx:id="payeeBudgetedPaymentTextField" prefHeight="24.0" prefWidth="211.0" promptText="[Default Payment amount]" />
                               <Label prefHeight="24.0" text="Balance">
@@ -172,7 +257,7 @@
                                     <Insets left="10.0" />
                                  </padding>
                               </Label>
-                              <TextField fx:id="payeeBalanceTextField" prefHeight="24.0" prefWidth="240.0" promptText="[Balance]" />
+                              <TextField fx:id="payeeBalanceTextField" prefHeight="24.0" prefWidth="238.0" promptText="[Balance]" />
                            </children>
                            <padding>
                               <Insets left="4.0" top="4.0" />

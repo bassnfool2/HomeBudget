@@ -10,15 +10,15 @@ import java.util.Calendar;
 
 import org.homebudget.HomeBudgetController;
 
-public class Income {
-	private static ArrayList<Income> incomes = null;
+public class FundSource {
+	private static ArrayList<FundSource> incomes = null;
 	
-	public static ArrayList<Income> getIncomes() {
+	public static ArrayList<FundSource> getFundSources() {
 		return incomes;
 	}
 
-	public static Income getIncome(int id) throws Exception {
-		for ( Income income : incomes) {
+	public static FundSource getFundSource(int id) throws Exception {
+		for ( FundSource income : incomes) {
 			if ( income.id == id ) return income;
 		}
 		throw new Exception("Income with id: "+id+" not found.");
@@ -29,12 +29,12 @@ public class Income {
 	String name = "";
 	PayFrequency payFrequency = PayFrequency.MONTHLY;
 	Date nextPayDate = new Date(Calendar.getInstance().getTimeInMillis());
-	float defaultPayAmount = Income.DEFAULT_AMOUNT;
+	float defaultPayAmount = FundSource.DEFAULT_AMOUNT;
 	
-	public Income() {
+	public FundSource() {
 		super();
 	}
-	public Income(int id, String name, PayFrequency payFrequency, float defaultPayAmount, Date payDate) {
+	public FundSource(int id, String name, PayFrequency payFrequency, float defaultPayAmount, Date payDate) {
 		this();
 		this.id = id;
 		this.name = name;
@@ -72,7 +72,7 @@ public class Income {
 	public void setDefaultPayAmount(Float defaultPayAmount) {
 		this.defaultPayAmount = defaultPayAmount;
 	}
-	public static void setIncomes(ArrayList<Income> incomes) {
+	public static void setIncomes(ArrayList<FundSource> incomes) {
 		incomes = incomes;
 	}
 	public void setId(int id) {
@@ -80,7 +80,7 @@ public class Income {
 	}
 	
 	public static void load() throws SQLException {
-		incomes = new ArrayList<Income>();
+		incomes = new ArrayList<FundSource>();
 		Statement stmt = null;
 		ResultSet rset = null;
 		try {
@@ -93,7 +93,7 @@ public class Income {
 				Float budgetedPay = rset.getFloat("budgetedPay");
 				String payFrequencyS = rset.getString("payFrequency");
 				Date nextPayDate = rset.getDate("nextPayDate");
-				Income Income = new Income(id, name, PayFrequency.valueOf(payFrequencyS), budgetedPay, nextPayDate);
+				FundSource Income = new FundSource(id, name, PayFrequency.valueOf(payFrequencyS), budgetedPay, nextPayDate);
 				incomes.add(Income);
 			}
 		} finally {
@@ -179,5 +179,13 @@ public class Income {
 	    };
 
 	    public abstract String toString();
-	}	
+	}
+	
+	public static FundSource getNewBudgetFunSources() {
+		return null;
+	}
+	
+	public String toString() {
+		return name;
+	}
 }
