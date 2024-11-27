@@ -69,7 +69,7 @@ public class BudgetController  extends VBox  {
 		gridTextFields = new TextField[paydayCount+1][Payee.getPayees().size()];
 		for ( Payee payee : Payee.getPayees()) {
 			payeeToRow.put(payee, payeeindex);
-			Label label = new Label(payee.getName()+"Due: "+payee.getDueOn());
+			Label label = new Label(payee.getName()+" ( Due: "+formatDay(payee.getDueOn())+" )");
 			//label.setPadding(new Insets(5, 5, 5, 5));
 			label.setMinWidth(180);
 			label.setMaxWidth(180);
@@ -105,6 +105,23 @@ public class BudgetController  extends VBox  {
 		grid.setGridLinesVisible(true);
 	}
 	
+	private String formatDay(Integer dueOn) {
+		switch (dueOn) {
+		case 1:
+		case 21:
+		case 31:
+			return Integer.toString(dueOn)+"st";
+		case 2:
+		case 22:
+			return Integer.toString(dueOn)+"nd";
+		case 3:
+		case 23:
+			return Integer.toString(dueOn)+"rd";
+		default:
+			return Integer.toString(dueOn)+"th";
+		}
+	}
+
 	private void initGridHeaderHBox(Budget budget2) {
 		Node payeesLabel = gridHeaderHBox.getChildren().get(0);
 		gridHeaderHBox.getChildren().clear();
