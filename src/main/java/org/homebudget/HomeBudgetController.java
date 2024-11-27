@@ -116,9 +116,12 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		// Add the row constraints to the grid pane
 		Budget budget = null;
 		if ( Budget.getBudgets().size() == 0) {
-			budget = Budget.createNextBudget();
+			budget = Budget.createNextBudget(Date.valueOf(Budget.getStartOfNextMonth()));
 		} else {
-			budget = Budget.getBudgets().get(0);			
+			budget = Budget.getBudgetByDate(Date.valueOf(LocalDate.now()));
+			if ( budget == null ) {
+				budget = Budget.getBudgets().get(Budget.getBudgets().size()-1); 
+			}
 		}
 		currentBudget = budget;
 		BudgetController budgetController = new BudgetController();

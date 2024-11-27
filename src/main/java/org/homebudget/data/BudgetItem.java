@@ -146,8 +146,10 @@ public class BudgetItem {
 			stmt.setBoolean(PAYED, payed);
 			stmt.setDate(PAYDATE, payDate);
 			stmt.setInt(ID, id);
-			return stmt.executeUpdate();
-			
+			int updated = stmt.executeUpdate();
+			if ( updated == 0 ) 
+				throw new SQLException("No budget item updated!");
+			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}

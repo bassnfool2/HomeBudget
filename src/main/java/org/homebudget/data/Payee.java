@@ -108,6 +108,9 @@ public class Payee {
 		this.defaultPaymentAmount = defaultPaymentAmount;
 	}
 
+	public String toString() {
+		return name;
+	}
 	public static void load() throws Exception {
 		payees = new ArrayList<Payee>();
 		Statement stmt = null;

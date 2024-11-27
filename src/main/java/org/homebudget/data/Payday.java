@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.data.FundSource.PayFrequency;
 
 public class Payday {
 	int id = HomeBudgetController.NEW_ADD;
@@ -47,13 +48,16 @@ public class Payday {
 	}
 
 	public static ArrayList<Payday> load(Budget budget) throws Exception {
+		Date endDate = Date.valueOf(budget.getDate().toLocalDate().plusMonths(1));
 		ArrayList<Payday> payDays = new ArrayList<Payday>();
-		Statement stmt = null;
+		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().createStatement();
-			rset = stmt.executeQuery("SELECT id, payDate, income_id \n"
-					+ "FROM payday order by payDate");
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("SELECT id, payDate, income_id \n"
+					+ "FROM payday where payDate >= ? and payDate < ? order by payDate");
+			stmt.setDate(1, budget.getDate());
+			stmt.setDate(2, endDate);
+			rset = stmt.executeQuery();
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				Date date = rset.getDate("payDate");
@@ -116,6 +120,24 @@ public class Payday {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}
 		
+	}
+	
+	public Payday getNextPayday() throws Exception {
+		Date paydate = null;
+		Payday payday = null;
+		switch (income.payFrequency) {
+		case EVERY_TWO_WEEKS:
+			paydate = Date.valueOf(date.toLocalDate().plusWeeks(2));
+			payday = new Payday(HomeBudgetController.NEW_ADD, null, paydate, income);
+			return payday;
+		case MONTHLY:
+			paydate = Date.valueOf(date.toLocalDate().plusMonths(1));
+			payday = new Payday(HomeBudgetController.NEW_ADD, null, paydate, income);
+			return payday;
+		case TWICE_MONTHLY:
+		default:
+			throw new Exception("not yet implemented!");			
+		}
 	}
 
 	
