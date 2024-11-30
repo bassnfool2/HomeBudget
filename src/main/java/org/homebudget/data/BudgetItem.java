@@ -17,6 +17,7 @@ public class BudgetItem {
 	float amount = 0;
 	boolean payed = false;
 	Date payDate = null;
+	boolean prevPaid = false;
 
 	public BudgetItem(int id, Payday payday, Payee payee, float amount, boolean payed, Date payDate) {
 		super();
@@ -51,6 +52,9 @@ public class BudgetItem {
 
 	public void setPayed(boolean payed) {
 		this.payed = payed;
+		if ( payed && !prevPaid && this.getPayee().getBalance() != 0) {
+			this.getPayee().setBalance(this.getPayee().getBalance() - amount); 
+		}
 	}
 
 	public Date getPayDate() {
@@ -85,6 +89,7 @@ public class BudgetItem {
 				boolean payed = rset.getBoolean("payed");
 				Date payDate = rset.getDate("payDate");
 				BudgetItem budgetItem = new BudgetItem(id, payday, payee, amount, payed, payDate);
+				budgetItem.prevPaid = payed;
 				budgetItems.add(budgetItem);
 			}
 			return budgetItems;

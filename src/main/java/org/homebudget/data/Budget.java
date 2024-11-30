@@ -95,6 +95,7 @@ public class Budget {
 			stmt.setDate(DATE, date);
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			Budget.getBudgets().add(this);
 			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
@@ -139,12 +140,15 @@ public class Budget {
 			}
 		}
 		for ( Payee payee : Payee.getPayees()) {
-			LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn()-1);
-			LocalDate nextPayDueDate = budget.getDate().toLocalDate().plusMonths(1).plusDays(payee.getDueOn()-1);
+			LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
+			LocalDate nextPayDueDate = budget.getDate().toLocalDate().plusMonths(1).plusDays(payee.getDueOn().getValue()-1);
 			for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
 				Payday payday = budget.getPaydays().get(i);
 				if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
-					if ( payday.getDate().before(Date.valueOf(payDueDate)) || payday.getDate().equals(Date.valueOf(payDueDate))) {
+					if ( payee.getDueOn().equals(PayonEnum.ON_SELECTED_PAYDAY)) {
+						BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
+						budgetItem.save();
+					} else if ( payday.getDate().before(Date.valueOf(payDueDate)) || payday.getDate().equals(Date.valueOf(payDueDate))) {
 						BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
 						budgetItem.save();
 						break;
@@ -172,7 +176,7 @@ public class Budget {
 	private static void addPaymentsDueNextMonthWhichNeedToBePaidThisMonth(Budget currentBudget) throws Exception {
 		Budget nextBudget = new Budget(HomeBudgetController.NEW_ADD, Date.valueOf(currentBudget.getDate().toLocalDate().plusMonths(1)));
 		for ( Payee payee : Payee.getPayees()) {
-			LocalDate payDueDate = nextBudget.getDate().toLocalDate().plusDays(payee.getDueOn()-1);
+			LocalDate payDueDate = nextBudget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
 			for ( int i = nextBudget.getPaydays().size()-1; i>= 0; i--) {
 				Payday payday = nextBudget.getPaydays().get(i);
 				if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
@@ -191,20 +195,20 @@ public class Budget {
 	private static void getNextFundDropTwiceMonthlyInterval(FundSource fundSource, Budget budget) throws SQLException {
 	}
 
-	private static void getNextFundDropMonthlyInterval(FundSource fundSource, Budget budget) throws SQLException {
+	private static void getNextFundDropMonthlyInterval(FundSource fundSource, Budget budget) throws Exception {
 		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
 			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
 		}
-		Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource);
+		Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource, fundSource.getBudgetedPay());
 		payday.save();		
 	}
 
-	private static void getNextFundDrop2WeekInterval(FundSource fundSource, Budget budget) throws SQLException {
+	private static void getNextFundDrop2WeekInterval(FundSource fundSource, Budget budget) throws Exception {
 		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
 			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
 		}
 		while ( fundSource.getNextPayDate().before(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1))))  {
-			Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource);
+			Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource, fundSource.getBudgetedPay());
 			payday.save();
 			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
 		}

@@ -78,16 +78,20 @@
             <Insets left="20.0" />
          </padding>
       </GridPane>
-      <HBox prefWidth="200.0">
+      <HBox fx:id="budgetPaydayTotalsHBox" prefWidth="200.0">
          <children>
-            <Label alignment="BOTTOM_CENTER" maxWidth="180.0" prefWidth="180.0" text="Totals:">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Label>
+            <VBox prefWidth="100.0">
+               <children>
+                  <Label alignment="CENTER_RIGHT" maxWidth="180.0" minWidth="180.0" prefHeight="24.0" prefWidth="180.0" text="Total Out:" textAlignment="RIGHT" />
+                  <Label alignment="CENTER_RIGHT" maxWidth="180.0" minWidth="180.0" prefHeight="24.0" prefWidth="180.0" text="Total Remaining:" textAlignment="RIGHT">
+                     <VBox.margin>
+                        <Insets right="10.0" />
+                     </VBox.margin></Label>
+               </children>
+            </VBox>
          </children>
          <VBox.margin>
-            <Insets left="20.0" />
+            <Insets left="20.0" top="5.0" />
          </VBox.margin>
       </HBox>
       <HBox prefWidth="200.0" spacing="4.0">

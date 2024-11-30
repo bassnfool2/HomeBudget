@@ -126,6 +126,7 @@ public class FundSource {
 			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
 			int inserted = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			FundSource.getFundSources().add(this);
 			return inserted;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};

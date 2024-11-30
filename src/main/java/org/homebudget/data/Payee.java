@@ -30,7 +30,7 @@ public class Payee {
 	String url = "";
 	String username = "";
 	String password = "";
-	int dueOn = Payee.DEFAULT_DAY_DUE;
+	PayonEnum dueOn = PayonEnum.fromInt(DEFAULT_DAY_DUE);
 	float defaultPaymentAmount = Payee.DEFAULT_AMOUNT_DUE;
 	float balance = Payee.DEFAULT_BALANCE;
 	FundSource paywithFundSource = null;
@@ -38,7 +38,7 @@ public class Payee {
 	public Payee() {
 		super();
 	}
-	public Payee(int id, String name, String url, String username, String password, int dueOn, float defaultPaymentAmount, float balance, FundSource fundSource) {
+	public Payee(int id, String name, String url, String username, String password, PayonEnum dueOn, float defaultPaymentAmount, float balance, FundSource fundSource) {
 		this();
 		this.id = id;
 		this.name = name;
@@ -87,10 +87,10 @@ public class Payee {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	public Integer getDueOn() {
+	public PayonEnum getDueOn() {
 		return dueOn;
 	}
-	public void setDueOn(int dueOn) {
+	public void setDueOn(PayonEnum dueOn) {
 		this.dueOn = dueOn;
 	}
 	public Float getBalance() {
@@ -128,7 +128,7 @@ public class Payee {
 				Float budgetedPayment = rset.getFloat("budgetedPayment");
 				Float balance = rset.getFloat("balance");
 				FundSource paywithFundSource = rset.getInt("income_id") == 0 ? null : FundSource.getFundSource(rset.getInt("income_id"));
-				Payee payee = new Payee(id, name, url, username, password, dueOn, budgetedPayment, balance, paywithFundSource);
+				Payee payee = new Payee(id, name, url, username, password, PayonEnum.fromInt(dueOn), budgetedPayment, balance, paywithFundSource);
 				payees.add(payee);
 			}
 		} finally {
@@ -161,12 +161,13 @@ public class Payee {
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
 			stmt.setString(PASSWORD, password);
-			stmt.setInt(DUE_ON, dueOn);
+			stmt.setInt(DUE_ON, dueOn.getValue());
 			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
 			stmt.setFloat(BALANCE, balance);
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			Payee.getPayees().add(this);
 			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
@@ -192,7 +193,7 @@ public class Payee {
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
 			stmt.setString(PASSWORD, password);
-			stmt.setInt(DUE_ON, dueOn);
+			stmt.setInt(DUE_ON, dueOn.getValue());
 			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
 			stmt.setFloat(BALANCE, balance);
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());

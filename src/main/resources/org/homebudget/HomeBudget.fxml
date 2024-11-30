@@ -53,6 +53,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import org.homebudget.PayonSelectController?>
 
 <fx:root prefHeight="800.0" prefWidth="1000.0" type="VBox" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1">
   <children>
@@ -249,7 +250,7 @@
                                  <padding>
                                     <Insets left="11.0" />
                                  </padding></Label>
-                              <TextField fx:id="payeeDueOnTextField" prefHeight="24.0" prefWidth="226.0" promptText="[Day of Month payment is due]" />
+                              <PayonSelectController fx:id="payonSelectController" ></PayonSelectController>
                               <Label prefHeight="24.0" text="Budgeted Payment" />
                               <TextField fx:id="payeeBudgetedPaymentTextField" prefHeight="24.0" prefWidth="211.0" promptText="[Default Payment amount]" />
                               <Label prefHeight="24.0" text="Balance">

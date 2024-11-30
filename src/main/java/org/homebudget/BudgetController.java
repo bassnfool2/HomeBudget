@@ -15,6 +15,10 @@ import org.homebudget.data.BudgetItem;
 import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -31,6 +35,7 @@ import javafx.scene.layout.VBox;
 public class BudgetController  extends VBox  {
     @FXML private GridPane grid;
     @FXML private HBox gridHeaderHBox;
+    @FXML private HBox budgetPaydayTotalsHBox;
     @FXML private Label budgetHeadLabel;
 	Budget budget = null;
 	HashMap<Payee, Integer> payeeToRow = new HashMap<Payee, Integer>();
@@ -57,6 +62,7 @@ public class BudgetController  extends VBox  {
 		this.budget = budget;
 		budgetHeadLabel.setText(budget.getDate().toLocalDate().toString());
 		initGridHeaderHBox(budget);
+		initBudgetPaydayTotalsHBox();
 		int paydayCount = budget.getPaydays().size();
 //		this.setWidth(paydayCount*150);
 		grid.setMaxWidth(((paydayCount+1)*150)+59);
@@ -69,7 +75,7 @@ public class BudgetController  extends VBox  {
 		gridTextFields = new TextField[paydayCount+1][Payee.getPayees().size()];
 		for ( Payee payee : Payee.getPayees()) {
 			payeeToRow.put(payee, payeeindex);
-			Label label = new Label(payee.getName()+" ( Due: "+formatDay(payee.getDueOn())+" )");
+			Label label = new Label(payee.getName()+" ( Due: "+payee.getDueOn().getAsString()+" )");
 			//label.setPadding(new Insets(5, 5, 5, 5));
 			label.setMinWidth(180);
 			label.setMaxWidth(180);
@@ -80,12 +86,58 @@ public class BudgetController  extends VBox  {
 				textField.setMinWidth(150);
 				textField.setMaxWidth(150);
 				textField.setPrefWidth(150);
-//				ContextMenu contextMenu = new ContextMenu();
-//				MenuItem menuItem = new MenuItem("Menu Item");
-//				contextMenu.getItems().add(menuItem);
-//				textField.setContextMenu(contextMenu);
-				BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null );
+				ContextMenu contextMenu = new ContextMenu();
+				contextMenu.setUserData(textField);
+				MenuItem menuItem = new MenuItem("Mark Paid");
+				menuItem.setOnAction(new EventHandler<ActionEvent>() {
+    				@Override
+    				public void handle(ActionEvent event) {
+    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+    					TextField textField = (TextField)contextMenu.getUserData();
+        				((BudgetItem)textField.getUserData()).setPayed(true);
+        				textField.setStyle("-fx-control-inner-background: #008000;");
+    				}
+				});
+				contextMenu.getItems().add(menuItem);
+
+				MenuItem notPaidMenuItem = new MenuItem("Mark Not Paid");
+				notPaidMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+    				@Override
+    				public void handle(ActionEvent event) {
+    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+    					TextField textField = (TextField)contextMenu.getUserData();
+        				((BudgetItem)textField.getUserData()).setPayed(false);
+        				textField.setStyle(null);
+    				}
+				});
+				contextMenu.getItems().add(notPaidMenuItem);
+
+				textField.setContextMenu(contextMenu);
+				BudgetItem budgetItem = null;
+				try {
+					budgetItem = budget.getPaydays().get(paydayCounter-1).getBudgetItem(payee);
+					textField.setText(budgetItem.getAmount() == 0 ? "" : budgetItem.getAmount().toString());
+					if ( budgetItem.isPayed()) {
+						textField.setStyle("-fx-control-inner-background: #008000;");
+					}
+				} catch ( Exception e) {
+					budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null );
+					budget.getPaydays().get(paydayCounter-1).addBudgetItem(budgetItem);
+				}
 				textField.setUserData(budgetItem);
+				textField.textProperty().addListener(new ChangeListener<String>() {
+				    @Override
+				    public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				    	TextField focusedTextField = (TextField) getScene().focusOwnerProperty().get();
+				    	try {
+							budgetItemTextFieldChanged(focusedTextField, oldValue, newValue);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				    }
+
+				});
 				gridTextFields[paydayCounter][payeeindex] = textField;
 				grid.add(textField, paydayCounter, payeeindex);				
 			}
@@ -94,32 +146,26 @@ public class BudgetController  extends VBox  {
 		int paydayindex = 1;
 		for ( Payday payday : budget.getPaydays()) {
 			gridHeaderHBox.getChildren().add(getPaydayHeader(payday));
+			budgetPaydayTotalsHBox.getChildren().add(getPaydayFooter(payday));
 			paydayToColumn.put(payday, paydayindex);
-			for ( BudgetItem budgetItem : payday.getBudgetItems()) {
-				TextField textField = gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())];
-				textField.setUserData(budgetItem);
-				textField.setText(budgetItem.getAmount() == 0 ? "" : budgetItem.getAmount().toString());
-			}
+//			for ( BudgetItem budgetItem : payday.getBudgetItems()) {
+//				TextField textField = gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())];
+//				textField.setUserData(budgetItem);
+//				textField.setText(budgetItem.getAmount() == 0 ? "" : budgetItem.getAmount().toString());
+//			}
+			float[] paydayTotals = computePaydayTotals(payday);
 			paydayindex++;
 		}
 		grid.setGridLinesVisible(true);
 	}
 	
-	private String formatDay(Integer dueOn) {
-		switch (dueOn) {
-		case 1:
-		case 21:
-		case 31:
-			return Integer.toString(dueOn)+"st";
-		case 2:
-		case 22:
-			return Integer.toString(dueOn)+"nd";
-		case 3:
-		case 23:
-			return Integer.toString(dueOn)+"rd";
-		default:
-			return Integer.toString(dueOn)+"th";
-		}
+	public void budgetItemTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
+    	BudgetItem budgetItem = ((BudgetItem)textField.getUserData());
+    	budgetItem.setAmount(newValue.isBlank() ? 0 :  Float.parseFloat(newValue));
+        VBox vbox = (VBox)budgetPaydayTotalsHBox.getChildren().get(paydayToColumn.get(budgetItem.getPayday()));
+        float[] totals = computePaydayTotals(budgetItem.getPayday());
+		((TextField)vbox.getChildren().get(0)).setText(Float.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		((TextField)vbox.getChildren().get(1)).setText(Float.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
 	}
 
 	private void initGridHeaderHBox(Budget budget2) {
@@ -128,19 +174,25 @@ public class BudgetController  extends VBox  {
 		gridHeaderHBox.getChildren().add(payeesLabel);
 	}
 
+	private void initBudgetPaydayTotalsHBox() {
+		Node payeesTotalsLabels = budgetPaydayTotalsHBox.getChildren().get(0);
+		budgetPaydayTotalsHBox.getChildren().clear();
+		budgetPaydayTotalsHBox.getChildren().add(payeesTotalsLabels);
+	}
+
 	public void saveBudget() {
 		try {
 			if ( gridTextFields != null ) {
 				for ( Payday payday : budget.getPaydays()) { payday.save();};
-				for ( int paydayIndex = 1; paydayIndex<=budget.getPaydays().size(); paydayIndex++ ) {
-					for ( int payeeIndex = 0; payeeIndex < Payee.getPayees().size(); payeeIndex++ ) {
-						BudgetItem budgetItem = ((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData());
-						String amountText = gridTextFields[paydayIndex][payeeIndex].getText();
-						float newamount =  amountText == "" ? 0 : Float.parseFloat(amountText);
-						budgetItem.setAmount(newamount);
-						((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData()).save();
-					}
-				}
+//				for ( int paydayIndex = 1; paydayIndex<=budget.getPaydays().size(); paydayIndex++ ) {
+//					for ( int payeeIndex = 0; payeeIndex < Payee.getPayees().size(); payeeIndex++ ) {
+//						BudgetItem budgetItem = ((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData());
+//						String amountText = gridTextFields[paydayIndex][payeeIndex].getText();
+//						float newamount =  amountText == "" ? 0 : Float.parseFloat(amountText);
+//						budgetItem.setAmount(newamount);
+//						((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData()).save();
+//					}
+//				}
 			}
 		} catch ( Exception e) {
 			e.printStackTrace();
@@ -194,12 +246,49 @@ public class BudgetController  extends VBox  {
 		TextField textField = new TextField();
 		textField.setPrefWidth(150);
 		textField.setMaxWidth(150);
-		textField.setText(payday.getIncome().getBudgetedPay().toString());
+		textField.setText(payday.getAmount().toString());
 		
 		vbox.getChildren().add(payeeNameLabel);
 		vbox.getChildren().add(paydayDateLabel);
 		vbox.getChildren().add(textField);
 		
 		return vbox;
+	}
+	
+	private Node getPaydayFooter(Payday payday) throws Exception {
+		float[] totals = computePaydayTotals(payday);
+		VBox vbox = new VBox();
+		TextField paydayTotalOutTextField = new TextField();
+		paydayTotalOutTextField.setEditable(false);
+		paydayTotalOutTextField.setPrefWidth(150);
+		paydayTotalOutTextField.setMaxWidth(150);
+		paydayTotalOutTextField.setText(Float.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		
+		TextField paydayTotalLeftTextField = new TextField();
+		paydayTotalLeftTextField.setEditable(false);
+		paydayTotalLeftTextField.setPrefWidth(150);
+		paydayTotalLeftTextField.setMaxWidth(150);
+		paydayTotalLeftTextField.setText(Float.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));
+
+		vbox.getChildren().add(paydayTotalOutTextField);
+		vbox.getChildren().add(paydayTotalLeftTextField);
+		return vbox;
+	}
+
+
+	
+	final static int PAYDAY_TOTAL_OUT_INDEX = 0; 
+	final static int PAYDAY_TOTAL_LEFT_INDEX = 1; 
+	private float[] computePaydayTotals(Payday payday) throws Exception {
+		float[] totals = new float[2];
+		float outTotal = 0;
+		float leftTotal = payday.getAmount();
+		for (BudgetItem budgetItem : payday.getBudgetItems()) {
+			outTotal = outTotal + budgetItem.getAmount();
+			leftTotal = leftTotal - budgetItem.getAmount();
+		}
+		totals[PAYDAY_TOTAL_OUT_INDEX] = outTotal;
+		totals[PAYDAY_TOTAL_LEFT_INDEX] = leftTotal;
+		return totals;
 	}
 }

@@ -23,6 +23,28 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'org.homebudget.HomeBudgetInit'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+ }
+
+task fatJar(type: Jar) {
+  manifest {
+    attributes 'Main-Class': 'org.homebudget.HomeBudgetInit'
+  }
+  archiveClassifier = "all"
+  from {
+    configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+  with jar
+}
+
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
@@ -31,8 +53,8 @@ dependencies {
     api 'org.apache.commons:commons-math3:3.6.1'
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'org.xerial:sqlite-jdbc:3.47.0.0'
+    api 'com.google.guava:guava:31.1-jre'
+    api 'org.xerial:sqlite-jdbc:3.47.0.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
