@@ -28,22 +28,22 @@ public class BudgetRow {
 		return payee.getName();
 	}
 	public String getBudgetItem0() {
-		return Float.toString(budgetItems[0].getAmount());
+		return Double.toString(budgetItems[0].getAmount());
 	}
 	public String getBudgetItem1() {
-		return Float.toString(budgetItems[1].getAmount());
+		return Double.toString(budgetItems[1].getAmount());
 	}
 	public String getBudgetItem2() {
-		return Float.toString(budgetItems[2].getAmount());
+		return Double.toString(budgetItems[2].getAmount());
 	}
 	public String getBudgetItem3() {
-		return Float.toString(budgetItems[3].getAmount());
+		return Double.toString(budgetItems[3].getAmount());
 	}
 	public String getBudgetItem4() {
-		return Float.toString(budgetItems[5].getAmount());
+		return Double.toString(budgetItems[5].getAmount());
 	}
 	public String getBudgetItem5() {
-		return Float.toString(budgetItems[5].getAmount());
+		return Double.toString(budgetItems[5].getAmount());
 	}
 	public BudgetItem[] grabBudgetItems() {
 		return budgetItems;

@@ -28,6 +28,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -88,6 +90,52 @@ public class BudgetController  extends VBox  {
 				textField.setPrefWidth(150);
 				ContextMenu contextMenu = new ContextMenu();
 				contextMenu.setUserData(textField);
+				MenuItem payonlineMenuItem = new MenuItem("Pay Online");
+				payonlineMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+    				@Override
+    				public void handle(ActionEvent event) {
+    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+    					TextField textField = (TextField)contextMenu.getUserData();
+    					String url = ((BudgetItem)textField.getUserData()).getPayee().getUrl();
+						Runtime runtime = Runtime.getRuntime();
+            			try {
+                			runtime.exec("xdg-open " + url); // for Unix/Linux
+		                // runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
+        			    } catch (IOException e) {
+                			e.printStackTrace();
+            			}    					
+    				}
+				});
+				contextMenu.getItems().add(payonlineMenuItem);
+
+				MenuItem copyUsernameMenuItem = new MenuItem("Copy Username");
+				copyUsernameMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+    				@Override
+    				public void handle(ActionEvent event) {
+    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+    					TextField textField = (TextField)contextMenu.getUserData();
+    					String username = ((BudgetItem)textField.getUserData()).getPayee().getUsername();
+    					
+						javafx.application.Platform.runLater(new BudgetClipboard(username)); 
+											
+    				}
+				});
+				contextMenu.getItems().add(copyUsernameMenuItem);
+
+				MenuItem copyPasswordMenuItem = new MenuItem("Copy Password");
+				copyPasswordMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+    				@Override
+    				public void handle(ActionEvent event) {
+    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+    					TextField textField = (TextField)contextMenu.getUserData();
+    					String password = ((BudgetItem)textField.getUserData()).getPayee().getPassword();
+    					
+						javafx.application.Platform.runLater(new BudgetClipboard(password)); 
+											
+    				}
+				});
+				contextMenu.getItems().add(copyPasswordMenuItem);
+
 				MenuItem menuItem = new MenuItem("Mark Paid");
 				menuItem.setOnAction(new EventHandler<ActionEvent>() {
     				@Override
@@ -116,7 +164,7 @@ public class BudgetController  extends VBox  {
 				BudgetItem budgetItem = null;
 				try {
 					budgetItem = budget.getPaydays().get(paydayCounter-1).getBudgetItem(payee);
-					textField.setText(budgetItem.getAmount() == 0 ? "" : budgetItem.getAmount().toString());
+					textField.setText(budgetItem.getAmount() == 0 ? "" : Double.valueOf(budgetItem.getAmount()).toString());
 					if ( budgetItem.isPayed()) {
 						textField.setStyle("-fx-control-inner-background: #008000;");
 					}
@@ -153,7 +201,7 @@ public class BudgetController  extends VBox  {
 //				textField.setUserData(budgetItem);
 //				textField.setText(budgetItem.getAmount() == 0 ? "" : budgetItem.getAmount().toString());
 //			}
-			float[] paydayTotals = computePaydayTotals(payday);
+			double[] paydayTotals = computePaydayTotals(payday);
 			paydayindex++;
 		}
 		grid.setGridLinesVisible(true);
@@ -161,11 +209,11 @@ public class BudgetController  extends VBox  {
 	
 	public void budgetItemTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
     	BudgetItem budgetItem = ((BudgetItem)textField.getUserData());
-    	budgetItem.setAmount(newValue.isBlank() ? 0 :  Float.parseFloat(newValue));
+    	budgetItem.setAmount(newValue.isBlank() ? 0 :  Double.parseDouble(newValue));
         VBox vbox = (VBox)budgetPaydayTotalsHBox.getChildren().get(paydayToColumn.get(budgetItem.getPayday()));
-        float[] totals = computePaydayTotals(budgetItem.getPayday());
-		((TextField)vbox.getChildren().get(0)).setText(Float.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
-		((TextField)vbox.getChildren().get(1)).setText(Float.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
+        double[] totals = computePaydayTotals(budgetItem.getPayday());
+		((TextField)vbox.getChildren().get(0)).setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		((TextField)vbox.getChildren().get(1)).setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
 	}
 
 	private void initGridHeaderHBox(Budget budget2) {
@@ -188,7 +236,7 @@ public class BudgetController  extends VBox  {
 //					for ( int payeeIndex = 0; payeeIndex < Payee.getPayees().size(); payeeIndex++ ) {
 //						BudgetItem budgetItem = ((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData());
 //						String amountText = gridTextFields[paydayIndex][payeeIndex].getText();
-//						float newamount =  amountText == "" ? 0 : Float.parseFloat(amountText);
+//						double newamount =  amountText == "" ? 0 : Double.parseDouble(amountText);
 //						budgetItem.setAmount(newamount);
 //						((BudgetItem)gridTextFields[paydayIndex][payeeIndex].getUserData()).save();
 //					}
@@ -256,19 +304,19 @@ public class BudgetController  extends VBox  {
 	}
 	
 	private Node getPaydayFooter(Payday payday) throws Exception {
-		float[] totals = computePaydayTotals(payday);
+		double[] totals = computePaydayTotals(payday);
 		VBox vbox = new VBox();
 		TextField paydayTotalOutTextField = new TextField();
 		paydayTotalOutTextField.setEditable(false);
 		paydayTotalOutTextField.setPrefWidth(150);
 		paydayTotalOutTextField.setMaxWidth(150);
-		paydayTotalOutTextField.setText(Float.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		paydayTotalOutTextField.setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
 		
 		TextField paydayTotalLeftTextField = new TextField();
 		paydayTotalLeftTextField.setEditable(false);
 		paydayTotalLeftTextField.setPrefWidth(150);
 		paydayTotalLeftTextField.setMaxWidth(150);
-		paydayTotalLeftTextField.setText(Float.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));
+		paydayTotalLeftTextField.setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));
 
 		vbox.getChildren().add(paydayTotalOutTextField);
 		vbox.getChildren().add(paydayTotalLeftTextField);
@@ -279,10 +327,10 @@ public class BudgetController  extends VBox  {
 	
 	final static int PAYDAY_TOTAL_OUT_INDEX = 0; 
 	final static int PAYDAY_TOTAL_LEFT_INDEX = 1; 
-	private float[] computePaydayTotals(Payday payday) throws Exception {
-		float[] totals = new float[2];
-		float outTotal = 0;
-		float leftTotal = payday.getAmount();
+	private double[] computePaydayTotals(Payday payday) throws Exception {
+		double[] totals = new double[2];
+		double outTotal = 0;
+		double leftTotal = payday.getAmount();
 		for (BudgetItem budgetItem : payday.getBudgetItems()) {
 			outTotal = outTotal + budgetItem.getAmount();
 			leftTotal = leftTotal - budgetItem.getAmount();
@@ -290,5 +338,24 @@ public class BudgetController  extends VBox  {
 		totals[PAYDAY_TOTAL_OUT_INDEX] = outTotal;
 		totals[PAYDAY_TOTAL_LEFT_INDEX] = leftTotal;
 		return totals;
+	}
+	
+	private class BudgetClipboard implements Runnable {
+		String pasteContent = null;
+		
+
+		public BudgetClipboard(String pasteContent) {
+			super();
+			this.pasteContent = pasteContent;
+		}
+
+
+		@Override
+		public void run() {
+			Clipboard clipboard = Clipboard.getSystemClipboard();
+			ClipboardContent content = new ClipboardContent();
+			content.putString(pasteContent);
+			clipboard.setContent(content);
+		}
 	}
 }

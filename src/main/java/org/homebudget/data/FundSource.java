@@ -24,17 +24,17 @@ public class FundSource {
 		throw new Exception("Income with id: "+id+" not found.");
 	}
 
-	final static float DEFAULT_AMOUNT = 0;
+	final static double DEFAULT_AMOUNT = 0;
 	int id = HomeBudgetController.NEW_ADD;
 	String name = "";
 	PayFrequency payFrequency = PayFrequency.MONTHLY;
 	Date nextPayDate = new Date(Calendar.getInstance().getTimeInMillis());
-	float defaultPayAmount = FundSource.DEFAULT_AMOUNT;
+	double defaultPayAmount = FundSource.DEFAULT_AMOUNT;
 	
 	public FundSource() {
 		super();
 	}
-	public FundSource(int id, String name, PayFrequency payFrequency, float defaultPayAmount, Date payDate) {
+	public FundSource(int id, String name, PayFrequency payFrequency, double defaultPayAmount, Date payDate) {
 		this();
 		this.id = id;
 		this.name = name;
@@ -66,10 +66,10 @@ public class FundSource {
 	public void setNextPayDate(Date nextPayDate) {
 		this.nextPayDate = nextPayDate == null ? new Date(Calendar.getInstance().getTimeInMillis()) : nextPayDate;
 	}
-	public Float getBudgetedPay() {
+	public Double getBudgetedPay() {
 		return defaultPayAmount;
 	}
-	public void setDefaultPayAmount(Float defaultPayAmount) {
+	public void setDefaultPayAmount(Double defaultPayAmount) {
 		this.defaultPayAmount = defaultPayAmount;
 	}
 	public static void setIncomes(ArrayList<FundSource> incomes) {
@@ -90,7 +90,7 @@ public class FundSource {
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				String name = rset.getString("name");
-				Float budgetedPay = rset.getFloat("budgetedPay");
+				Double budgetedPay = rset.getDouble("budgetedPay");
 				String payFrequencyS = rset.getString("payFrequency");
 				Date nextPayDate = rset.getDate("nextPayDate");
 				FundSource Income = new FundSource(id, name, PayFrequency.valueOf(payFrequencyS), budgetedPay, nextPayDate);
@@ -121,7 +121,7 @@ public class FundSource {
 					+ "(name, budgetedPay, payFrequency, nextPayDate)\n"
 					+ "VALUES(?, ?, ?, ?)");
 			stmt.setString(NAME, name);
-			stmt.setFloat(BUDGETED_PAY, getBudgetedPay());
+			stmt.setDouble(BUDGETED_PAY, getBudgetedPay());
 			stmt.setString(PAY_FREQUENCY, getPayFrequency().name());
 			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
 			int inserted = stmt.executeUpdate();
@@ -147,7 +147,7 @@ public class FundSource {
 					+ "SET name=?, budgetedPay=?, payFrequency=?, nextPayDate=?\n"
 					+ "WHERE id=?;");
 			stmt.setString(NAME, name);
-			stmt.setFloat(BUDGETED_PAY, getBudgetedPay());
+			stmt.setDouble(BUDGETED_PAY, getBudgetedPay());
 			stmt.setString(PAY_FREQUENCY, getPayFrequency().name());
 			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
 			stmt.setInt(ID, id);

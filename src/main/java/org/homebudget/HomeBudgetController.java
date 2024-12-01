@@ -38,7 +38,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
-import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -63,8 +63,8 @@ public class HomeBudgetController extends VBox  {
     @FXML private TableColumn<Payee, String> payeeNameTableColumn;
     @FXML private TableColumn<Payee, String> payeeUrlTableColumn;
     @FXML private TableColumn<Payee, String> payeeDueDayTableColumn;
-    @FXML private TableColumn<Payee, Float> payeeDefaultPaymentTableColumn;
-    @FXML private TableColumn<Payee, Float> payeeBalanceTableColumn;
+    @FXML private TableColumn<Payee, Double> payeeDefaultPaymentTableColumn;
+    @FXML private TableColumn<Payee, Double> payeeBalanceTableColumn;
     
     @FXML private TextField incomeNameTextField;
     @FXML private TextField incomeBudgetedPaymentAmountTextField;
@@ -74,7 +74,7 @@ public class HomeBudgetController extends VBox  {
     @FXML private TableView<FundSource> incomeTableView;
     @FXML private TableColumn<FundSource, String> incomeNameTableColumn;
     @FXML private TableColumn<FundSource, String> incomePayFrequencyTableColumn;
-    @FXML private TableColumn<FundSource, Float> incomeBudgetedAmountTableColumn;
+    @FXML private TableColumn<FundSource, Double> incomeBudgetedAmountTableColumn;
     @FXML private Tab budgetTab;
 
     
@@ -134,7 +134,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	private void loadIncome() throws SQLException {
 		incomeNameTableColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getName()));
 		incomePayFrequencyTableColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getPayFrequency().toString()));
-		incomeBudgetedAmountTableColumn.setCellValueFactory(p -> new SimpleFloatProperty(p.getValue().getBudgetedPay()).asObject());
+		incomeBudgetedAmountTableColumn.setCellValueFactory(p -> new SimpleDoubleProperty(p.getValue().getBudgetedPay()).asObject());
 		FundSource.load();
 		for ( FundSource income : FundSource.getFundSources()) {
 			incomeTableView.getItems().add(income);
@@ -147,8 +147,8 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		payeeNameTableColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getName()));
 		payeeUrlTableColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getUrl()));
 		payeeDueDayTableColumn.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getDueOn().getAsString()));
-		payeeDefaultPaymentTableColumn.setCellValueFactory(p -> new SimpleFloatProperty(p.getValue().getDefaultPaymentAmount()).asObject());
-		payeeBalanceTableColumn.setCellValueFactory(p -> new SimpleFloatProperty(p.getValue().getBalance()).asObject());
+		payeeDefaultPaymentTableColumn.setCellValueFactory(p -> new SimpleDoubleProperty(p.getValue().getDefaultPaymentAmount()).asObject());
+		payeeBalanceTableColumn.setCellValueFactory(p -> new SimpleDoubleProperty(p.getValue().getBalance()).asObject());
 		Payee.load();
 		for ( Payee payee : Payee.getPayees()) {
 			payeeTableView.getItems().add(payee);
@@ -203,8 +203,8 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		currentPayee.setPassword(payeePasswordField.getText());
 		currentPayee.setUrl(payeeUrlTextField.getText());
 		currentPayee.setDueOn(payonSelectController.getSelectedPayon());
-		currentPayee.setBalance(payeeBalanceTextField.getText().equals("") ? 0 : Float.parseFloat(payeeBalanceTextField.getText()));
-		currentPayee.setDefaultPaymentAmount(Float.parseFloat(payeeBudgetedPaymentTextField.getText()));
+		currentPayee.setBalance(payeeBalanceTextField.getText().equals("") ? 0 : Double.parseDouble(payeeBalanceTextField.getText()));
+		currentPayee.setDefaultPaymentAmount(Double.parseDouble(payeeBudgetedPaymentTextField.getText()));
 		currentPayee.setPaywithFundSource(payeeIncomeComboBox.getSelectionModel().getSelectedItem());
 		try {
 			int result = currentPayee.save();
@@ -228,7 +228,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		boolean newAdd = ( currentIncome.getId() == HomeBudgetController.NEW_ADD);
 		currentIncome.setName(incomeNameTextField.getText());
 		currentIncome.setPayFrequency(incomePayfrequencyComboBox.getSelectionModel().getSelectedItem());
-		currentIncome.setDefaultPayAmount(Float.parseFloat(incomeBudgetedPaymentAmountTextField.getText()));
+		currentIncome.setDefaultPayAmount(Double.parseDouble(incomeBudgetedPaymentAmountTextField.getText()));
 		currentIncome.setNextPayDate(Date.valueOf(incomeStartingDateDatePicker.getValue()));
 		try {
 			int result = currentIncome.save();

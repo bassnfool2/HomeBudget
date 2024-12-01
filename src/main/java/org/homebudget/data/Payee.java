@@ -23,22 +23,22 @@ public class Payee {
 	}
 
 	final static int DEFAULT_DAY_DUE = 1;
-	final static float DEFAULT_AMOUNT_DUE = 0;
-	final static float DEFAULT_BALANCE = 0;
+	final static double DEFAULT_AMOUNT_DUE = 0;
+	final static double DEFAULT_BALANCE = 0;
 	int id = HomeBudgetController.NEW_ADD;
 	String name = "";
 	String url = "";
 	String username = "";
 	String password = "";
 	PayonEnum dueOn = PayonEnum.fromInt(DEFAULT_DAY_DUE);
-	float defaultPaymentAmount = Payee.DEFAULT_AMOUNT_DUE;
-	float balance = Payee.DEFAULT_BALANCE;
+	double defaultPaymentAmount = Payee.DEFAULT_AMOUNT_DUE;
+	double balance = Payee.DEFAULT_BALANCE;
 	FundSource paywithFundSource = null;
 	
 	public Payee() {
 		super();
 	}
-	public Payee(int id, String name, String url, String username, String password, PayonEnum dueOn, float defaultPaymentAmount, float balance, FundSource fundSource) {
+	public Payee(int id, String name, String url, String username, String password, PayonEnum dueOn, double defaultPaymentAmount, double balance, FundSource fundSource) {
 		this();
 		this.id = id;
 		this.name = name;
@@ -93,18 +93,18 @@ public class Payee {
 	public void setDueOn(PayonEnum dueOn) {
 		this.dueOn = dueOn;
 	}
-	public Float getBalance() {
+	public Double getBalance() {
 		return balance;
 	}
-	public void setBalance(float balance) {
+	public void setBalance(double balance) {
 		this.balance = balance;
 	}
 	
-	public Float getDefaultPaymentAmount() {
+	public Double getDefaultPaymentAmount() {
 		return defaultPaymentAmount;
 	}
 
-	public void setDefaultPaymentAmount(float defaultPaymentAmount) {
+	public void setDefaultPaymentAmount(double defaultPaymentAmount) {
 		this.defaultPaymentAmount = defaultPaymentAmount;
 	}
 
@@ -125,8 +125,8 @@ public class Payee {
 				String username = rset.getString("username");
 				String password = rset.getString("password");
 				Integer dueOn = rset.getInt("due_on");
-				Float budgetedPayment = rset.getFloat("budgetedPayment");
-				Float balance = rset.getFloat("balance");
+				Double budgetedPayment = rset.getDouble("budgetedPayment");
+				Double balance = rset.getDouble("balance");
 				FundSource paywithFundSource = rset.getInt("income_id") == 0 ? null : FundSource.getFundSource(rset.getInt("income_id"));
 				Payee payee = new Payee(id, name, url, username, password, PayonEnum.fromInt(dueOn), budgetedPayment, balance, paywithFundSource);
 				payees.add(payee);
@@ -162,8 +162,8 @@ public class Payee {
 			stmt.setString(USERNAME, username);
 			stmt.setString(PASSWORD, password);
 			stmt.setInt(DUE_ON, dueOn.getValue());
-			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
-			stmt.setFloat(BALANCE, balance);
+			stmt.setDouble(BUDGETED_PAYMENT, defaultPaymentAmount);
+			stmt.setDouble(BALANCE, balance);
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
@@ -194,8 +194,8 @@ public class Payee {
 			stmt.setString(USERNAME, username);
 			stmt.setString(PASSWORD, password);
 			stmt.setInt(DUE_ON, dueOn.getValue());
-			stmt.setFloat(BUDGETED_PAYMENT, defaultPaymentAmount);
-			stmt.setFloat(BALANCE, balance);
+			stmt.setDouble(BUDGETED_PAYMENT, defaultPaymentAmount);
+			stmt.setDouble(BALANCE, balance);
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			stmt.setInt(ID, id);
 			return stmt.executeUpdate();

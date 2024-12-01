@@ -14,12 +14,12 @@ public class BudgetItem {
 	int id = HomeBudgetController.NEW_ADD;
 	Payday payday = null;
 	Payee payee = null;
-	float amount = 0;
+	double amount = 0;
 	boolean payed = false;
 	Date payDate = null;
 	boolean prevPaid = false;
 
-	public BudgetItem(int id, Payday payday, Payee payee, float amount, boolean payed, Date payDate) {
+	public BudgetItem(int id, Payday payday, Payee payee, double amount, boolean payed, Date payDate) {
 		super();
 		this.id = id;
 		this.payday = payday;
@@ -38,11 +38,11 @@ public class BudgetItem {
 		this.payday = payday;
 	}
 
-	public Float getAmount() {
+	public double getAmount() {
 		return amount;
 	}
 
-	public void setAmount(float amount) {
+	public void setAmount(double amount) {
 		this.amount = amount;
 	}
 
@@ -85,7 +85,7 @@ public class BudgetItem {
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				Payee payee = Payee.getPayee(rset.getInt("payee_id"));
-				float amount = rset.getFloat("amount");
+				double amount = rset.getDouble("amount");
 				boolean payed = rset.getBoolean("payed");
 				Date payDate = rset.getDate("payDate");
 				BudgetItem budgetItem = new BudgetItem(id, payday, payee, amount, payed, payDate);
@@ -120,7 +120,7 @@ public class BudgetItem {
 					+ "VALUES(?, ?, ?, ?, ?)");
 			stmt.setInt(PAYDAY_ID, payday.getId());
 			stmt.setInt(PAYEE_ID, payee.getId());
-			stmt.setFloat(AMOUNT, amount);
+			stmt.setDouble(AMOUNT, amount);
 			stmt.setBoolean(PAYED, payed);
 			stmt.setDate(PAYDATE, payDate);
 			int updated = stmt.executeUpdate();
@@ -147,7 +147,7 @@ public class BudgetItem {
 					+ "WHERE id=?");
 			stmt.setInt(PAYDAY_ID, payday.getId());
 			stmt.setInt(PAYEE_ID, payee.getId());
-			stmt.setFloat(AMOUNT, amount);
+			stmt.setDouble(AMOUNT, amount);
 			stmt.setBoolean(PAYED, payed);
 			stmt.setDate(PAYDATE, payDate);
 			stmt.setInt(ID, id);

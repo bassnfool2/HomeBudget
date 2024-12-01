@@ -15,11 +15,11 @@ public class Payday {
 	int id = HomeBudgetController.NEW_ADD;
 	Date date = Date.valueOf(LocalDate.now().plusMonths(1).withDayOfMonth(1));
 	FundSource income = null;
-	float amount = 0;
+	double amount = 0;
 	Budget budget = null;
 	ArrayList<BudgetItem> budgetItems = new ArrayList<BudgetItem>();
 	
-	public Payday(int id, Budget budget, Date date, FundSource income, float amount) {
+	public Payday(int id, Budget budget, Date date, FundSource income, double amount) {
 		this.id = id;
 		this.date = date;
 		this.income = income;
@@ -49,11 +49,11 @@ public class Payday {
 		return budgetItems;
 	}
 
-	public Float getAmount() {
+	public Double getAmount() {
 		return amount;
 	}
 
-	public void setAmount(float amount) {
+	public void setAmount(double amount) {
 		this.amount = amount;
 	}
 
@@ -72,7 +72,7 @@ public class Payday {
 				int id = rset.getInt("id");
 				Date date = rset.getDate("payDate");
 				FundSource income = FundSource.getFundSource(rset.getInt("income_id"));
-				float amount = rset.getFloat("amount");
+				double amount = rset.getDouble("amount");
 				Payday payDay = new Payday(id, budget, date, income, amount);
 				payDays.add(payDay);
 			}
@@ -107,7 +107,7 @@ public class Payday {
 			stmt.setDate(PAYDATE, date);
 			stmt.setInt(INCOME_ID, income.getId());
 			stmt.setInt(BUDGET_ID, budget.getId());
-			stmt.setFloat(AMOUNT, amount);
+			stmt.setDouble(AMOUNT, amount);
 			int updated = stmt.executeUpdate();
 			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			
@@ -131,7 +131,7 @@ public class Payday {
 					+ "WHERE id=?");
 			stmt.setDate(DATE, date);
 			stmt.setInt(INCOME_ID, income.getId());
-			stmt.setFloat(AMOUNT, amount);
+			stmt.setDouble(AMOUNT, amount);
 			stmt.setInt(ID, id);
 			return stmt.executeUpdate();
 			
