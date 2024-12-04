@@ -24,7 +24,8 @@ public class HomeBudgetInit extends Application {
 		}
 	}
 	
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
+		HomeBudgetController.setDBType(args[0]);
 		launch(args);
 	}
 }

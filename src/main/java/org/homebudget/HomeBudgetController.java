@@ -24,6 +24,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -36,6 +37,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -45,6 +47,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class HomeBudgetController extends VBox  {
+	public static String dbType = null;
+	public static String password = null;
 	public static final int NEW_ADD = -1;
 	public Payee currentPayee = new Payee();
 	public FundSource currentIncome = new FundSource();
@@ -76,6 +80,9 @@ public class HomeBudgetController extends VBox  {
     @FXML private TableColumn<FundSource, String> incomePayFrequencyTableColumn;
     @FXML private TableColumn<FundSource, Double> incomeBudgetedAmountTableColumn;
     @FXML private Tab budgetTab;
+    @FXML private HBox passwordHBox;
+    @FXML private TabPane tabbedPane;
+    @FXML private PasswordField passwordTextField;
 
     
     public HomeBudgetController() {
@@ -91,8 +98,14 @@ public class HomeBudgetController extends VBox  {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+    
+    public void unlockDb() {
 		try {
-			initDb("/home/ghobbs/Documents/zbudget.db");
+//			initDb("/home/ghobbs/Documents/zbudget.db","sqlite");
+			initDb("/home/ghobbs/Development/java/HomeBudget/hb.db","derby", passwordTextField.getText());
+			passwordHBox.setVisible(false);
+			tabbedPane.setVisible(true);
 			incomePayfrequencyComboBox.getItems().setAll(PayFrequency.values());
 			loadIncome();
 			payeeIncomeComboBox.getItems().setAll(FundSource.getFundSources());
@@ -103,7 +116,7 @@ public class HomeBudgetController extends VBox  {
 			e.printStackTrace();
 			System.exit(1);
 		}
-	}
+    }
 
 	private void loadBudgets() throws Exception {
 		Budget.load();
@@ -157,15 +170,29 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		payeeTableView.refresh();
 	}
 
-	private void initDb(String dbPath) throws SQLException {
-		try {
-		    Class.forName("org.sqlite.JDBC");
-		    String url = "jdbc:sqlite:"+dbPath;
-		    HomeBudgetController.conn = DriverManager.getConnection(url);
-		} catch (ClassNotFoundException e) {
-		    System.err.println("Could not init JDBC driver - driver not found");
-		    e.printStackTrace();
-		}		
+	private void initDb(String dbPath, String type, String password) throws SQLException {
+		switch ( type) {
+		case "sqlite" :
+			try {
+				Class.forName("org.sqlite.JDBC");
+				String url = "jdbc:sqlite:"+dbPath;
+				HomeBudgetController.conn = DriverManager.getConnection(url);
+			} catch (ClassNotFoundException e) {
+				System.err.println("Could not init JDBC driver - driver not found");
+				e.printStackTrace();
+			}
+
+			break;
+		case "derby" :
+			try {
+				Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+				String url = "jdbc:derby:"+dbPath+";dataEncryption=true;bootPassword="+password;
+				HomeBudgetController.conn = DriverManager.getConnection(url);
+			} catch (ClassNotFoundException e) {
+				System.err.println("Could not init JDBC driver - driver not found");
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public static Connection getDbConnection() {
@@ -203,8 +230,10 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		currentPayee.setPassword(payeePasswordField.getText());
 		currentPayee.setUrl(payeeUrlTextField.getText());
 		currentPayee.setDueOn(payonSelectController.getSelectedPayon());
-		currentPayee.setBalance(payeeBalanceTextField.getText().equals("") ? 0 : Double.parseDouble(payeeBalanceTextField.getText()));
-		currentPayee.setDefaultPaymentAmount(Double.parseDouble(payeeBudgetedPaymentTextField.getText()));
+		currentPayee.setBalance(payeeBalanceTextField.getText().equals("") ? 0 :
+			Double.parseDouble(payeeBalanceTextField.getText()));
+		currentPayee.setDefaultPaymentAmount(payeeBudgetedPaymentTextField.getText().equals("") ? 0 : 
+			Double.parseDouble(payeeBudgetedPaymentTextField.getText()));
 		currentPayee.setPaywithFundSource(payeeIncomeComboBox.getSelectionModel().getSelectedItem());
 		try {
 			int result = currentPayee.save();
@@ -319,5 +348,9 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	        super.cancelEdit();
 	        setGraphic(null);
 	    }
+	}
+
+	public static void setDBType(String string) {
+		dbType = string;
 	}
 }

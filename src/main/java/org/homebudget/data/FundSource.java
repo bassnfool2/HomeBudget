@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.db.DbUtils;
 
 public class FundSource {
 	private static ArrayList<FundSource> incomes = null;
@@ -86,7 +87,7 @@ public class FundSource {
 		try {
 			stmt = HomeBudgetController.getDbConnection().createStatement();
 			rset = stmt.executeQuery("SELECT id, name, budgetedPay, payFrequency, nextPayDate\n"
-					+ "FROM income;");
+					+ "FROM \"income\"");
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				String name = rset.getString("name");
@@ -117,15 +118,15 @@ public class FundSource {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO income\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"income\"\n"
 					+ "(name, budgetedPay, payFrequency, nextPayDate)\n"
-					+ "VALUES(?, ?, ?, ?)");
+					+ "VALUES(?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setString(NAME, name);
 			stmt.setDouble(BUDGETED_PAY, getBudgetedPay());
 			stmt.setString(PAY_FREQUENCY, getPayFrequency().name());
 			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
 			int inserted = stmt.executeUpdate();
-			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			id = DbUtils.getLastGeneratedId(stmt);
 			FundSource.getFundSources().add(this);
 			return inserted;
 		} finally {
@@ -143,7 +144,7 @@ public class FundSource {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE income\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"income\"\n"
 					+ "SET name=?, budgetedPay=?, payFrequency=?, nextPayDate=?\n"
 					+ "WHERE id=?;");
 			stmt.setString(NAME, name);

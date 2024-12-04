@@ -55,6 +55,9 @@ dependencies {
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     api 'com.google.guava:guava:31.1-jre'
     api 'org.xerial:sqlite-jdbc:3.47.0.0'
+    api 'org.apache.derby:derby:10.16.1.1'
+	api 'org.apache.derby:derbytools:10.16.1.1'
+	api 'org.apache.derby:derbyshared:10.16.1.1'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.db.DbUtils;
 
 public class BudgetItem {
 	int id = HomeBudgetController.NEW_ADD;
@@ -79,7 +80,7 @@ public class BudgetItem {
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("SELECT id, payday_id, payee_id, amount, payed, payDate\n"
-					+ "FROM budgetItem where payday_id = ?");
+					+ "FROM \"budgetItem\" where payday_id = ?");
 			stmt.setInt(1, payday.getId());
 			rset = stmt.executeQuery();
 			while ( rset.next()) {
@@ -115,16 +116,17 @@ public class BudgetItem {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO budgetItem\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"budgetItem\"\n"
 					+ "(payday_id, payee_id, amount, payed, payDate)\n"
-					+ "VALUES(?, ?, ?, ?, ?)");
+					+ "VALUES(?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setInt(PAYDAY_ID, payday.getId());
 			stmt.setInt(PAYEE_ID, payee.getId());
 			stmt.setDouble(AMOUNT, amount);
 			stmt.setBoolean(PAYED, payed);
 			stmt.setDate(PAYDATE, payDate);
 			int updated = stmt.executeUpdate();
-			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			id = DbUtils.getLastGeneratedId(stmt);
+			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
@@ -142,7 +144,7 @@ public class BudgetItem {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE budgetItem\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"budgetItem\"\n"
 					+ "SET payday_id=?, payee_id=?, amount=?, payed=?, payDate=?\n"
 					+ "WHERE id=?");
 			stmt.setInt(PAYDAY_ID, payday.getId());

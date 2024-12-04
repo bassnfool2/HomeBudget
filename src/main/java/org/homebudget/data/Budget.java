@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.db.DbUtils;
 
 public class Budget {
 	private static ArrayList<Budget> budgets = new ArrayList<Budget>();
@@ -64,7 +65,7 @@ public class Budget {
 		try {
 			stmt = HomeBudgetController.getDbConnection().createStatement();
 			rset = stmt.executeQuery("SELECT id, budgetDate\n"
-					+ "FROM budget order by budgetDate desc");
+					+ "FROM \"budget\" order by budgetDate desc");
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				Date date = rset.getDate("budgetDate");
@@ -88,15 +89,19 @@ public class Budget {
 		final int DATE = i++;
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
+		String [] colNames = new String [] { "id" };
+
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO budget\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"budget\"\n"
 					+ "(budgetDate)\n"
-					+ "VALUES(?)");
+					+ "VALUES(?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setDate(DATE, date);
-			int updated = stmt.executeUpdate();
-			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			//intt updated = 
+			stmt.executeUpdate();
+			id = DbUtils.getLastGeneratedId(stmt);
+			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			Budget.getBudgets().add(this);
-			return updated;
+			return 1;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}
@@ -109,7 +114,7 @@ public class Budget {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE budget\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"budget\"\n"
 					+ "SET budgetDate=?\n"
 					+ "WHERE id=?");
 			stmt.setDate(DATE, date);
@@ -215,7 +220,7 @@ public class Budget {
 	}
 	
 	public static LocalDate getStartOfNextMonth() {
-        return LocalDate.now().with(TemporalAdjusters.firstDayOfNextMonth());
+        return LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
     }
 	
 	public static Budget getBudgetByDate(Date targetDate) {

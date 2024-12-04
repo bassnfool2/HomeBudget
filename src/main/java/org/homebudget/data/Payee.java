@@ -1,12 +1,24 @@
 package org.homebudget.data;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Base64;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.db.DbUtils;
 
 public class Payee {
 	private static ArrayList<Payee> payees = null;
@@ -117,7 +129,7 @@ public class Payee {
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().createStatement();
-			rset = stmt.executeQuery("select id, name, url, username, password, due_on, budgetedPayment, balance, income_id from payee order by name");
+			rset = stmt.executeQuery("select id, name, url, username, password, due_on, budgetedPayment, balance, income_id from \"payee\" order by name");
 			while ( rset.next()) {
 				int id = rset.getInt("id");
 				String name = rset.getString("name");
@@ -156,7 +168,7 @@ public class Payee {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("insert into payee (name, url, username, password, due_on, budgetedPayment, balance, income_id) values (?, ?, ?, ?, ?, ?, ?, ?)");
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("insert into \"payee\" (name, url, username, password, due_on, budgetedPayment, balance, income_id) values (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setString(NAME, name);
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
@@ -166,7 +178,8 @@ public class Payee {
 			stmt.setDouble(BALANCE, balance);
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			int updated = stmt.executeUpdate();
-			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			id = DbUtils.getLastGeneratedId(stmt);
+			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			Payee.getPayees().add(this);
 			return updated;
 		} finally {
@@ -188,7 +201,7 @@ public class Payee {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("update payee set name = ?, url = ?, username=?, password=?, due_on=?, budgetedPayment=?, balance=?, income_id=? where id = ?");
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("update \"payee\" set name = ?, url = ?, username=?, password=?, due_on=?, budgetedPayment=?, balance=?, income_id=? where id = ?");
 			stmt.setString(NAME, name);
 			stmt.setString(URL, url);
 			stmt.setString(USERNAME, username);
@@ -205,5 +218,4 @@ public class Payee {
 		}
 		
 	}
-	
 }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import org.homebudget.HomeBudgetController;
 import org.homebudget.data.FundSource.PayFrequency;
+import org.homebudget.db.DbUtils;
 
 public class Payday {
 	int id = HomeBudgetController.NEW_ADD;
@@ -64,7 +65,7 @@ public class Payday {
 		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("SELECT id, payDate, income_id, amount \n"
-					+ "FROM payday where payDate >= ? and payDate < ? order by payDate");
+					+ "FROM \"payday\" where payDate >= ? and payDate < ? order by payDate");
 			stmt.setDate(1, budget.getDate());
 			stmt.setDate(2, endDate);
 			rset = stmt.executeQuery();
@@ -101,15 +102,16 @@ public class Payday {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO payDay\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"payday\"\n"
 					+ "(payDate, income_id, budget_id, amount)\n"
-					+ "VALUES(?, ?, ?, ?)");
+					+ "VALUES(?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setDate(PAYDATE, date);
 			stmt.setInt(INCOME_ID, income.getId());
 			stmt.setInt(BUDGET_ID, budget.getId());
 			stmt.setDouble(AMOUNT, amount);
 			int updated = stmt.executeUpdate();
-			id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
+			id = DbUtils.getLastGeneratedId(stmt);
+			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			
 			return updated;
 		} finally {
@@ -126,7 +128,7 @@ public class Payday {
 		PreparedStatement stmt = null;
 		ResultSet rset = null;
 		try {
-			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE payDay\n"
+			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"payday\"\n"
 					+ "SET payDate=?, income_id = ?, amount = ?\n"
 					+ "WHERE id=?");
 			stmt.setDate(DATE, date);
