@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -18,6 +19,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.PayeeAddedListener;
 import org.homebudget.db.DbUtils;
 
 public class Payee {
@@ -32,6 +34,19 @@ public class Payee {
 			if ( payee.id == id ) return payee;
 		}
 		throw new Exception("Payee with id: "+id+" not found.");
+	}
+
+	static List<PayeeAddedListener> payeeAddedListeners = new ArrayList<PayeeAddedListener>();
+	
+	public static void addPayeeAddedListener(PayeeAddedListener listener) {
+		payeeAddedListeners.add(listener);
+	}
+	
+	private static void add(Payee payee) {
+		payees.add(payee);
+		for ( PayeeAddedListener listener : payeeAddedListeners) {
+			listener.newPayeeAdded(payee);
+		}
 	}
 
 	final static int DEFAULT_DAY_DUE = 1;
@@ -180,7 +195,7 @@ public class Payee {
 			int updated = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
 			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
-			Payee.getPayees().add(this);
+			Payee.add(this);
 			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};

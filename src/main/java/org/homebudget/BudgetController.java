@@ -12,8 +12,10 @@ import java.util.HashMap;
 
 import org.homebudget.data.Budget;
 import org.homebudget.data.BudgetItem;
+import org.homebudget.data.FundSource;
 import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
+import org.homebudget.data.PayonEnum;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -34,7 +36,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class BudgetController  extends VBox  {
+public class BudgetController  extends VBox implements PayeeAddedListener, IncomeAddedListener {
     @FXML private GridPane grid;
     @FXML private HBox gridHeaderHBox;
     @FXML private HBox budgetPaydayTotalsHBox;
@@ -57,121 +59,76 @@ public class BudgetController  extends VBox  {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		Payee.addPayeeAddedListener(this);
+		FundSource.addFunAddedListener(this);
 	}
 	
 	public void setBudget(Budget budget) throws Exception {
 		this.budget = budget;
-		budgetHeadLabel.setText(budget.getDate().toLocalDate().toString());
+		for ( FundSource fundSource : FundSource.getFundSources() ) {
+			boolean found = false;
+			for ( Payday payday : budget.getPaydays()) {
+				if ( payday.getIncome().equals(fundSource)) {
+					found = true;
+					break;
+				} 
+			}
+			if ( found ) continue;
+			Budget.getFundDrop(fundSource, budget);
+		}
+		budgetHeadLabel.setText(budget == null ? "" : budget.getDate().toLocalDate().toString());
 		initGridHeaderHBox(budget);
 		initBudgetPaydayTotalsHBox();
-		int paydayCount = budget.getPaydays().size();
+		int paydayCount = budget == null ? 0 : budget.getPaydays().size();
 //		this.setWidth(paydayCount*150);
-		grid.setMaxWidth(((paydayCount+1)*150)+59);
-		grid.setPrefWidth(((paydayCount+1)*150)+59);
+		grid.setMaxWidth(((paydayCount+1)*150)+180);
+		grid.setPrefWidth(((paydayCount+1)*150)+180);
 //		grid.setPrefWidth(paydayCount*150);
-		grid.setMinWidth(((paydayCount+1)*150)+59);
-		System.out.println("Budget date:"+budget.getDate());
+		grid.setMinWidth(((paydayCount+1)*150)+180);
+		//System.out.println("Budget date:"+budget.getDate());
 		int payeeindex = 0;
 		grid.getChildren().clear();
 		gridTextFields = new TextField[paydayCount+1][Payee.getPayees().size()];
 		for ( Payee payee : Payee.getPayees()) {
 			payeeToRow.put(payee, payeeindex);
-			Label label = new Label(payee.getName()+" ( Due: "+payee.getDueOn().getAsString()+" )");
+			boolean payeeAddtoAPayday = false;
+			Label label = new Label(payee.getName()+" ( Due: "+payee.getDefaultPaymentAmount()+" on: "+payee.getDueOn().getAsString()+" )");
 			//label.setPadding(new Insets(5, 5, 5, 5));
-			label.setMinWidth(180);
-			label.setMaxWidth(180);
-			label.setPrefWidth(180);
+			label.setMinWidth(300);
+			label.setMaxWidth(300);
+			label.setPrefWidth(300);
 			grid.add(label, 0, payeeindex);
 			for ( int paydayCounter = 1; paydayCounter <= paydayCount; paydayCounter++) {
 				TextField textField = new TextField("");
 				textField.setMinWidth(150);
 				textField.setMaxWidth(150);
 				textField.setPrefWidth(150);
-				ContextMenu contextMenu = new ContextMenu();
-				contextMenu.setUserData(textField);
-				MenuItem payonlineMenuItem = new MenuItem("Pay Online");
-				payonlineMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-    				@Override
-    				public void handle(ActionEvent event) {
-    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-    					TextField textField = (TextField)contextMenu.getUserData();
-    					String url = ((BudgetItem)textField.getUserData()).getPayee().getUrl();
-						Runtime runtime = Runtime.getRuntime();
-            			try {
-                			runtime.exec("xdg-open " + url); // for Unix/Linux
-		                // runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
-        			    } catch (IOException e) {
-                			e.printStackTrace();
-            			}    					
-    				}
-				});
-				contextMenu.getItems().add(payonlineMenuItem);
-
-				MenuItem copyUsernameMenuItem = new MenuItem("Copy Username");
-				copyUsernameMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-    				@Override
-    				public void handle(ActionEvent event) {
-    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-    					TextField textField = (TextField)contextMenu.getUserData();
-    					String username = ((BudgetItem)textField.getUserData()).getPayee().getUsername();
-    					
-						javafx.application.Platform.runLater(new BudgetClipboard(username)); 
-											
-    				}
-				});
-				contextMenu.getItems().add(copyUsernameMenuItem);
-
-				MenuItem copyPasswordMenuItem = new MenuItem("Copy Password");
-				copyPasswordMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-    				@Override
-    				public void handle(ActionEvent event) {
-    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-    					TextField textField = (TextField)contextMenu.getUserData();
-    					String password = ((BudgetItem)textField.getUserData()).getPayee().getPassword();
-    					
-						javafx.application.Platform.runLater(new BudgetClipboard(password)); 
-											
-    				}
-				});
-				contextMenu.getItems().add(copyPasswordMenuItem);
-
-				MenuItem menuItem = new MenuItem("Mark Paid");
-				menuItem.setOnAction(new EventHandler<ActionEvent>() {
-    				@Override
-    				public void handle(ActionEvent event) {
-    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-    					TextField textField = (TextField)contextMenu.getUserData();
-        				((BudgetItem)textField.getUserData()).setPayed(true);
-        				textField.setStyle("-fx-control-inner-background: #008000;");
-    				}
-				});
-				contextMenu.getItems().add(menuItem);
-
-				MenuItem notPaidMenuItem = new MenuItem("Mark Not Paid");
-				notPaidMenuItem.setOnAction(new EventHandler<ActionEvent>() {
-    				@Override
-    				public void handle(ActionEvent event) {
-    					ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-    					TextField textField = (TextField)contextMenu.getUserData();
-        				((BudgetItem)textField.getUserData()).setPayed(false);
-        				textField.setStyle(null);
-    				}
-				});
-				contextMenu.getItems().add(notPaidMenuItem);
-
-				textField.setContextMenu(contextMenu);
+				addContextMenu(textField);
 				BudgetItem budgetItem = null;
 				try {
 					budgetItem = budget.getPaydays().get(paydayCounter-1).getBudgetItem(payee);
-					textField.setText(budgetItem.getAmount() == 0 ? "" : Double.valueOf(budgetItem.getAmount()).toString());
 					if ( budgetItem.isPayed()) {
 						textField.setStyle("-fx-control-inner-background: #008000;");
 					}
 				} catch ( Exception e) {
-					budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null );
+					if ( payee.getPaywithFundSource().equals(budget.getPaydays().get(paydayCounter-1).getIncome())) {
+						LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
+						if ( payee.getDueOn().equals(PayonEnum.ON_SELECTED_PAYDAY)) {
+							budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, payee.getDefaultPaymentAmount(), false, null);
+						} else if (( budget.getPaydays().get(paydayCounter-1).getDate().before(Date.valueOf(payDueDate)) || budget.getPaydays().get(paydayCounter-1).getDate().equals(Date.valueOf(payDueDate))) && !payeeAddtoAPayday) {
+							budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, payee.getDefaultPaymentAmount(), false, null);
+							payeeAddtoAPayday = true;
+						} else {
+							budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null);
+						}
+					} else {
+						budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null);
+					}
+					budgetItem.save();
+					//budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, budget.getPaydays().get(paydayCounter-1), payee, 0, false, null );
 					budget.getPaydays().get(paydayCounter-1).addBudgetItem(budgetItem);
 				}
+				textField.setText(budgetItem.getAmount() == 0 ? "" : Double.valueOf(budgetItem.getAmount()).toString());
 				textField.setUserData(budgetItem);
 				textField.textProperty().addListener(new ChangeListener<String>() {
 				    @Override
@@ -192,6 +149,7 @@ public class BudgetController  extends VBox  {
 			payeeindex++;
 		}
 		int paydayindex = 1;
+		if ( budget == null ) return; 
 		for ( Payday payday : budget.getPaydays()) {
 			gridHeaderHBox.getChildren().add(getPaydayHeader(payday));
 			budgetPaydayTotalsHBox.getChildren().add(getPaydayFooter(payday));
@@ -207,6 +165,82 @@ public class BudgetController  extends VBox  {
 		grid.setGridLinesVisible(true);
 	}
 	
+	private void addContextMenu(TextField textField) {
+		ContextMenu contextMenu = new ContextMenu();
+		contextMenu.setUserData(textField);
+		MenuItem payonlineMenuItem = new MenuItem("Pay Online");
+		payonlineMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+				TextField textField = (TextField)contextMenu.getUserData();
+				String url = ((BudgetItem)textField.getUserData()).getPayee().getUrl();
+				Runtime runtime = Runtime.getRuntime();
+				try {
+					runtime.exec("xdg-open " + url); // for Unix/Linux
+					// runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
+				} catch (IOException e) {
+					e.printStackTrace();
+				}    					
+			}
+		});
+		contextMenu.getItems().add(payonlineMenuItem);
+
+		MenuItem copyUsernameMenuItem = new MenuItem("Copy Username");
+		copyUsernameMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+				TextField textField = (TextField)contextMenu.getUserData();
+				String username = ((BudgetItem)textField.getUserData()).getPayee().getUsername();
+
+				javafx.application.Platform.runLater(new BudgetClipboard(username)); 
+
+			}
+		});
+		contextMenu.getItems().add(copyUsernameMenuItem);
+
+		MenuItem copyPasswordMenuItem = new MenuItem("Copy Password");
+		copyPasswordMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+				TextField textField = (TextField)contextMenu.getUserData();
+				String password = ((BudgetItem)textField.getUserData()).getPayee().getPassword();
+
+				javafx.application.Platform.runLater(new BudgetClipboard(password)); 
+
+			}
+		});
+		contextMenu.getItems().add(copyPasswordMenuItem);
+
+		MenuItem menuItem = new MenuItem("Mark Paid");
+		menuItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+				TextField textField = (TextField)contextMenu.getUserData();
+				((BudgetItem)textField.getUserData()).setPayed(true);
+				textField.setStyle("-fx-control-inner-background: #008000;");
+			}
+		});
+		contextMenu.getItems().add(menuItem);
+
+		MenuItem notPaidMenuItem = new MenuItem("Mark Not Paid");
+		notPaidMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
+				TextField textField = (TextField)contextMenu.getUserData();
+				((BudgetItem)textField.getUserData()).setPayed(false);
+				textField.setStyle(null);
+			}
+		});
+		contextMenu.getItems().add(notPaidMenuItem);
+		textField.setContextMenu(contextMenu);
+
+	}
+
 	public void budgetItemTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
     	BudgetItem budgetItem = ((BudgetItem)textField.getUserData());
     	budgetItem.setAmount(newValue.isBlank() ? 0 :  Double.parseDouble(newValue));
@@ -356,6 +390,26 @@ public class BudgetController  extends VBox  {
 			ClipboardContent content = new ClipboardContent();
 			content.putString(pasteContent);
 			clipboard.setContent(content);
+		}
+	}
+
+	@Override
+	public void newPayeeAdded(Payee payee) {
+		try {
+			setBudget(budget);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void newFundingSourceAdded(FundSource fundSource) {
+		try {
+			setBudget(budget);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

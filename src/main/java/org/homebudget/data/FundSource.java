@@ -7,8 +7,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import org.homebudget.HomeBudgetController;
+import org.homebudget.IncomeAddedListener;
+import org.homebudget.PayeeAddedListener;
 import org.homebudget.db.DbUtils;
 
 public class FundSource {
@@ -25,11 +28,24 @@ public class FundSource {
 		throw new Exception("Income with id: "+id+" not found.");
 	}
 
+	static List<IncomeAddedListener> incomeAddedListeners = new ArrayList<IncomeAddedListener>();
+	
+	public static void addFunAddedListener(IncomeAddedListener listener) {
+		incomeAddedListeners.add(listener);
+	}
+	
+	private static void add(FundSource fundSource) {
+		incomes.add(fundSource);
+		for ( IncomeAddedListener listener : incomeAddedListeners) {
+			listener.newFundingSourceAdded(fundSource);
+		}
+	}
+
 	final static double DEFAULT_AMOUNT = 0;
 	int id = HomeBudgetController.NEW_ADD;
 	String name = "";
 	PayFrequency payFrequency = PayFrequency.MONTHLY;
-	Date nextPayDate = new Date(Calendar.getInstance().getTimeInMillis());
+	Date firstPayDate = new Date(Calendar.getInstance().getTimeInMillis());
 	double defaultPayAmount = FundSource.DEFAULT_AMOUNT;
 	
 	public FundSource() {
@@ -41,7 +57,7 @@ public class FundSource {
 		this.name = name;
 		this.defaultPayAmount = defaultPayAmount;
 		this.payFrequency = payFrequency;
-		setNextPayDate(payDate);
+		setFirstPayDate(payDate);
 	}
 
 	public Integer getId() {
@@ -61,11 +77,11 @@ public class FundSource {
 		this.payFrequency = payFrequency;
 	}
 
-	public Date getNextPayDate() {
-		return nextPayDate;
+	public Date getFirstPayDate() {
+		return firstPayDate;
 	}
-	public void setNextPayDate(Date nextPayDate) {
-		this.nextPayDate = nextPayDate == null ? new Date(Calendar.getInstance().getTimeInMillis()) : nextPayDate;
+	public void setFirstPayDate(Date nextPayDate) {
+		this.firstPayDate = nextPayDate == null ? new Date(Calendar.getInstance().getTimeInMillis()) : nextPayDate;
 	}
 	public Double getBudgetedPay() {
 		return defaultPayAmount;
@@ -124,10 +140,10 @@ public class FundSource {
 			stmt.setString(NAME, name);
 			stmt.setDouble(BUDGETED_PAY, getBudgetedPay());
 			stmt.setString(PAY_FREQUENCY, getPayFrequency().name());
-			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
+			stmt.setDate(NEXT_PAY_DATE, firstPayDate);
 			int inserted = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
-			FundSource.getFundSources().add(this);
+			FundSource.add(this);
 			return inserted;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
@@ -146,11 +162,11 @@ public class FundSource {
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"income\"\n"
 					+ "SET name=?, budgetedPay=?, payFrequency=?, nextPayDate=?\n"
-					+ "WHERE id=?;");
+					+ "WHERE id=?");
 			stmt.setString(NAME, name);
 			stmt.setDouble(BUDGETED_PAY, getBudgetedPay());
 			stmt.setString(PAY_FREQUENCY, getPayFrequency().name());
-			stmt.setDate(NEXT_PAY_DATE, nextPayDate);
+			stmt.setDate(NEXT_PAY_DATE, firstPayDate);
 			stmt.setInt(ID, id);
 			return stmt.executeUpdate();
 			
@@ -161,6 +177,12 @@ public class FundSource {
 	}
 	
 	public enum PayFrequency {
+	    EVERY_WEEK {
+	        @Override
+	        public String toString() {
+	            return "Every week";
+	        }
+	    },
 	    EVERY_TWO_WEEKS {
 	        @Override
 	        public String toString() {
@@ -181,10 +203,6 @@ public class FundSource {
 	    };
 
 	    public abstract String toString();
-	}
-	
-	public static FundSource getNewBudgetFunSources() {
-		return null;
 	}
 	
 	public String toString() {

@@ -132,17 +132,7 @@ public class Budget {
 		budget = new Budget(HomeBudgetController.NEW_ADD, date);
 		budget.save();
 		for ( FundSource fundSource : FundSource.getFundSources()) {
-			switch (fundSource.getPayFrequency()) {
-			case EVERY_TWO_WEEKS: 
-				getNextFundDrop2WeekInterval(fundSource, budget);
-				break;
-			case MONTHLY:
-				getNextFundDropMonthlyInterval(fundSource, budget);
-				break;
-			case TWICE_MONTHLY:
-				getNextFundDropTwiceMonthlyInterval(fundSource, budget);
-				break;
-			}
+			getFundDrop(fundSource, budget);
 		}
 		for ( Payee payee : Payee.getPayees()) {
 			LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
@@ -197,27 +187,41 @@ public class Budget {
 		}
 	}
 
-	private static void getNextFundDropTwiceMonthlyInterval(FundSource fundSource, Budget budget) throws SQLException {
-	}
-
-	private static void getNextFundDropMonthlyInterval(FundSource fundSource, Budget budget) throws Exception {
-		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
-			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
-		}
-		Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource, fundSource.getBudgetedPay());
-		payday.save();		
-	}
-
-	private static void getNextFundDrop2WeekInterval(FundSource fundSource, Budget budget) throws Exception {
-		while ( fundSource.getNextPayDate().before(budget.getDate()))  {
-			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
-		}
-		while ( fundSource.getNextPayDate().before(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1))))  {
-			Payday payday = new Payday(HomeBudgetController.NEW_ADD, budget, fundSource.getNextPayDate(), fundSource, fundSource.getBudgetedPay());
+	public static void getFundDrop(FundSource fundSource, Budget budget) throws Exception {
+		ArrayList<Payday> paydays = new ArrayList<Payday>();
+		Payday payday = null;
+		Date paydate =fundSource.getFirstPayDate(); 
+		switch ( fundSource.payFrequency) {
+		case MONTHLY:
+			while ( paydate.before(budget.getDate()))  {
+				paydate = Date.valueOf(paydate.toLocalDate().plusMonths(1));
+			}
+			payday = new Payday(HomeBudgetController.NEW_ADD, budget, paydate, fundSource, fundSource.getBudgetedPay());
 			payday.save();
-			fundSource.setNextPayDate(Date.valueOf(fundSource.getNextPayDate().toLocalDate().plusWeeks(2)));
+			break;
+		case EVERY_TWO_WEEKS:			
+			while ( paydate.before(budget.getDate()))  {
+				paydate = Date.valueOf(paydate.toLocalDate().plusWeeks(2));
+			}
+			while ( paydate.before(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1))))  {
+				payday = new Payday(HomeBudgetController.NEW_ADD, budget, paydate, fundSource, fundSource.getBudgetedPay());
+				payday.save();
+				paydate = Date.valueOf(paydate.toLocalDate().plusWeeks(2));
+			}
+			break;
+		case EVERY_WEEK:			
+			while ( paydate.before(budget.getDate()))  {
+				paydate = Date.valueOf(paydate.toLocalDate().plusWeeks(1));
+			}
+			while ( paydate.before(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1))))  {
+				payday = new Payday(HomeBudgetController.NEW_ADD, budget, paydate, fundSource, fundSource.getBudgetedPay());
+				payday.save();
+				paydate = Date.valueOf(paydate.toLocalDate().plusWeeks(1));
+			}
+			break;
 		}
 	}
+
 	
 	public static LocalDate getStartOfNextMonth() {
         return LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
@@ -230,5 +234,16 @@ public class Budget {
 			} 
 		}
 		return null;
+	}
+
+	public void addPayday(Payday newPayday) {
+		int index = 0;
+		for ( Payday payday : paydays) {
+			if ( newPayday.getDate().before(payday.getDate())) {
+				break;
+			}
+			index++;
+		}
+		paydays.add(index, newPayday);
 	}
 }

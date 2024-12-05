@@ -41,7 +41,7 @@
       </HBox>
       <HBox fx:id="gridHeaderHBox">
          <children>
-            <Label alignment="BOTTOM_CENTER" maxWidth="180.0" prefHeight="70.0" prefWidth="180.0" text="Payees">
+            <Label alignment="BOTTOM_CENTER" maxWidth="300.0" minWidth="300.0" prefHeight="70.0" prefWidth="300.0" text="Payees">
                <font>
                   <Font size="18.0" />
                </font>
@@ -69,10 +69,9 @@
       </HBox>
       <ScrollPane prefWidth="200.0">
          <content>
-            <GridPane fx:id="grid" gridLinesVisible="true" maxWidth="300.0">
+            <GridPane fx:id="grid" gridLinesVisible="true">
                <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="150.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="300.0" />
                </columnConstraints>
                <rowConstraints>
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -87,8 +86,8 @@
          <children>
             <VBox prefWidth="100.0">
                <children>
-                  <Label alignment="CENTER_RIGHT" maxWidth="180.0" minWidth="180.0" prefHeight="24.0" prefWidth="180.0" text="Total Out:" textAlignment="RIGHT" />
-                  <Label alignment="CENTER_RIGHT" maxWidth="180.0" minWidth="180.0" prefHeight="24.0" prefWidth="180.0" text="Total Remaining:" textAlignment="RIGHT">
+                  <Label alignment="CENTER_RIGHT" maxWidth="300.0" minWidth="300.0" prefHeight="24.0" prefWidth="300.0" text="Total Out:" textAlignment="RIGHT" />
+                  <Label alignment="CENTER_RIGHT" maxWidth="300.0" minWidth="300.0" prefHeight="24.0" prefWidth="300.0" text="Total Remaining:" textAlignment="RIGHT">
                      <VBox.margin>
                         <Insets right="10.0" />
                      </VBox.margin></Label>

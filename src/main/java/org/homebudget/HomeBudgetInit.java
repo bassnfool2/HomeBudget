@@ -3,7 +3,12 @@
  */
 package org.homebudget;
 
+import java.io.File;
+import java.io.IOException;
+
 import javafx.application.Application;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
@@ -13,18 +18,45 @@ public class HomeBudgetInit extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			HomeBudgetController homeBankController = new HomeBudgetController();
+			HomeBudgetController homeBudgetController = new HomeBudgetController();
 			
-			Scene homeBudgetScene = new Scene(homeBankController);
-			primaryStage.setScene(homeBudgetScene);
+			Scene homeBudgetScene = new Scene(homeBudgetController);
+			primaryStage.setScene(homeBudgetScene);			
 			primaryStage.setMaximized(true);
+			loadConfig(homeBudgetController);
 			primaryStage.show();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
+	private void loadConfig(HomeBudgetController homeBudgetController) {
+		if ( Settings.config.getProperty("recent.files") != null && !Settings.config.getProperty("recent.files").trim().equals("")) {
+			String[] recentFiles = Settings.config.getProperty("recent.files").split(",");
+			homeBudgetController.setHomeBudgetDb(recentFiles[0]);
+		} else {
+			DirectoryChooser fileChooser = new DirectoryChooser();
+			//File selectedFile = fileChooser.showOpenDialog((Stage)this.getScene().getWindow());
+			File selectedFile = fileChooser.showDialog(homeBudgetController.getScene().getWindow());
+			if ( selectedFile.exists()) {
+				if ( selectedFile.isDirectory()) {
+					if ( selectedFile.list().length == 0) {
+						homeBudgetController.setIsNewFile(true);
+					}
+					homeBudgetController.setHomeBudgetDb(selectedFile.getAbsolutePath());
+				}
+			}
+		}
+
+	}
+
 	public static void main(String[] args) {
+		try {
+			Settings.loadProperties();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		HomeBudgetController.setDBType(args[0]);
 		launch(args);
 	}

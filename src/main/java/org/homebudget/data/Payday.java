@@ -110,6 +110,7 @@ public class Payday {
 			stmt.setInt(BUDGET_ID, budget.getId());
 			stmt.setDouble(AMOUNT, amount);
 			int updated = stmt.executeUpdate();
+			budget.addPayday(this);
 			id = DbUtils.getLastGeneratedId(stmt);
 			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			
@@ -147,6 +148,9 @@ public class Payday {
 		Date paydate = null;
 		Payday payday = null;
 		switch (income.payFrequency) {
+		case EVERY_WEEK:
+			paydate = Date.valueOf(date.toLocalDate().plusWeeks(1));
+			break;
 		case EVERY_TWO_WEEKS:
 			paydate = Date.valueOf(date.toLocalDate().plusWeeks(2));
 			break;

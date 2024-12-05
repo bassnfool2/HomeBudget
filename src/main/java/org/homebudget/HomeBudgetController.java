@@ -1,6 +1,8 @@
 package org.homebudget;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.Date;
@@ -17,6 +19,7 @@ import org.homebudget.data.FundSource;
 import org.homebudget.data.FundSource.PayFrequency;
 import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
+import org.homebudget.db.DbUtils;
 import org.homebudget.PayonSelectController;
 
 import javafx.fxml.FXML;
@@ -40,15 +43,36 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Scene;
 
 public class HomeBudgetController extends VBox  {
+	Scene myScene = null;
+
+	public Scene getMyScene() {
+		return myScene;
+	}
+
+	public void setMyScene(Scene scene) {
+		this.myScene = scene;
+	}
+
+	public static String homeBudgetDb = null;
+	public static String getHomeBudgetDb() {
+		return homeBudgetDb;
+	}
+
+	public static void setHomeBudgetDb(String inHomeBudgetDb) {
+		homeBudgetDb = inHomeBudgetDb;
+	}
+
 	public static String dbType = null;
-	public static String password = null;
+	public String password = null;
 	public static final int NEW_ADD = -1;
 	public Payee currentPayee = new Payee();
 	public FundSource currentIncome = new FundSource();
@@ -83,6 +107,7 @@ public class HomeBudgetController extends VBox  {
     @FXML private HBox passwordHBox;
     @FXML private TabPane tabbedPane;
     @FXML private PasswordField passwordTextField;
+    public boolean isNewFile = false;
 
     
     public HomeBudgetController() {
@@ -103,7 +128,8 @@ public class HomeBudgetController extends VBox  {
     public void unlockDb() {
 		try {
 //			initDb("/home/ghobbs/Documents/zbudget.db","sqlite");
-			initDb("/home/ghobbs/Development/java/HomeBudget/hb.db","derby", passwordTextField.getText());
+//			initDb("/home/ghobbs/Development/java/HomeBudget/hb.db","derby", passwordTextField.getText());
+			initDb(homeBudgetDb,"derby", passwordTextField.getText());
 			passwordHBox.setVisible(false);
 			tabbedPane.setVisible(true);
 			incomePayfrequencyComboBox.getItems().setAll(PayFrequency.values());
@@ -130,7 +156,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		// Add the row constraints to the grid pane
 		Budget budget = null;
 		if ( Budget.getBudgets().size() == 0) {
-			budget = Budget.createNextBudget(Date.valueOf(Budget.getStartOfNextMonth()));
+			//budget = Budget.createNextBudget(Date.valueOf(Budget.getStartOfNextMonth()));
 		} else {
 			budget = Budget.getBudgetByDate(Date.valueOf(LocalDate.now()));
 			if ( budget == null ) {
@@ -138,10 +164,33 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 			}
 		}
 		currentBudget = budget;
-		BudgetController budgetController = new BudgetController();
-		budgetController.setBudget(budget);
-		budgetTab.setContent(budgetController);
+		if ( budget == null ) {
+			WelcomeController welcomeController = new WelcomeController(this);
+			budgetTab.setContent(welcomeController);
+		} else {
+			BudgetController budgetController = new BudgetController();
+			budgetController.setBudget(budget);
+			budgetTab.setContent(budgetController);
+		}
 		
+	}
+
+	public Budget getCurrentBudget() {
+		return currentBudget;
+	}
+
+	public void setCurrentBudget(Budget budget) {
+		try {
+			if ( this.currentBudget == null) {
+				BudgetController budgetController = new BudgetController();
+				budgetController.setBudget(budget);
+				budgetTab.setContent(budgetController);			
+			}
+			this.currentBudget = budget;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void loadIncome() throws SQLException {
@@ -170,7 +219,10 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		payeeTableView.refresh();
 	}
 
-	private void initDb(String dbPath, String type, String password) throws SQLException {
+	private void initDb(String dbPath, String type, String password) throws SQLException, IOException, URISyntaxException {
+		if ( isNewFile ) {
+			type = "derby";
+		}
 		switch ( type) {
 		case "sqlite" :
 			try {
@@ -186,15 +238,19 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		case "derby" :
 			try {
 				Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-				String url = "jdbc:derby:"+dbPath+";dataEncryption=true;bootPassword="+password;
+				String url = "jdbc:derby:"+dbPath+File.separator+"hb.db"+";dataEncryption=true;bootPassword="+password;
+				if ( isNewFile) url = url.concat(";create=true");
 				HomeBudgetController.conn = DriverManager.getConnection(url);
+				if (isNewFile) {
+					DbUtils.initNewDB();
+				}
 			} catch (ClassNotFoundException e) {
 				System.err.println("Could not init JDBC driver - driver not found");
 				e.printStackTrace();
 			}
 		}
-	}
-	
+	}	
+
 	public static Connection getDbConnection() {
 		return conn;
 	}
@@ -212,6 +268,12 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 
 	public void quit() {
+		try {
+			Settings.saveProperties();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.exit(0);
 	}
 
@@ -258,7 +320,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		currentIncome.setName(incomeNameTextField.getText());
 		currentIncome.setPayFrequency(incomePayfrequencyComboBox.getSelectionModel().getSelectedItem());
 		currentIncome.setDefaultPayAmount(Double.parseDouble(incomeBudgetedPaymentAmountTextField.getText()));
-		currentIncome.setNextPayDate(Date.valueOf(incomeStartingDateDatePicker.getValue()));
+		currentIncome.setFirstPayDate(Date.valueOf(incomeStartingDateDatePicker.getValue()));
 		try {
 			int result = currentIncome.save();
 			if (result != 1 ) {
@@ -269,6 +331,8 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		}
 		if ( newAdd ) {
 			incomeTableView.getItems().add(currentIncome);
+			payeeIncomeComboBox.getItems().clear();
+			payeeIncomeComboBox.getItems().addAll(FundSource.getFundSources());
 		}
 		incomeTableView.refresh();
 	}
@@ -302,7 +366,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		incomeNameTextField.setText(currentIncome.getName());
 		incomePayfrequencyComboBox.getSelectionModel().select(currentIncome.getPayFrequency());
 		incomeBudgetedPaymentAmountTextField.setText(currentIncome.getBudgetedPay().toString());
-		incomeStartingDateDatePicker.setValue(currentIncome.getNextPayDate().toLocalDate());
+		incomeStartingDateDatePicker.setValue(currentIncome.getFirstPayDate().toLocalDate());
 	}
 
 	private void setCurrentPayee(Payee payee) {
@@ -353,4 +417,10 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	public static void setDBType(String string) {
 		dbType = string;
 	}
+
+	public void setIsNewFile(boolean b) {
+		this.isNewFile = b;
+	}
+	
+
 }
