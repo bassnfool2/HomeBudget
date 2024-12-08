@@ -1,5 +1,25 @@
 package org.homebudget;
 
+/*
+ * Copyright (C) 2024 Gerry Hobbs
+ * bassnfool2@gmail.com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -41,18 +61,20 @@ public class Settings {
 
 	public static void saveProperties() throws IOException {
 		String currentFile = HomeBudgetController.getHomeBudgetDb();
-		String[] recentFiles = config.getProperty("recent.files").split(",");
 		StringBuilder newRecentFiles = new StringBuilder(currentFile);
-		int counter = 0;
-		for ( String filePath : recentFiles) {
-			if ( filePath.equals(currentFile)) {
-				continue;
-			}
-			newRecentFiles.append(",");
-			newRecentFiles.append(filePath);
-			counter++;
-			if ( counter > 4) {
-				break;
+		if (!( Settings.config.getProperty("recent.files") == null || !Settings.config.getProperty("recent.files").trim().equals(""))) {
+			String[] recentFiles = config.getProperty("recent.files").split(",");
+			int counter = 0;
+			for ( String filePath : recentFiles) {
+				if ( filePath.equals(currentFile)) {
+					continue;
+				}
+				newRecentFiles.append(",");
+				newRecentFiles.append(filePath);
+				counter++;
+				if ( counter > 4) {
+					break;
+				}
 			}
 		}
 		config.setProperty("recent.files",newRecentFiles.toString());

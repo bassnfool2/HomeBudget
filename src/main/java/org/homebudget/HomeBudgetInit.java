@@ -3,6 +3,26 @@
  */
 package org.homebudget;
 
+/*
+ * Copyright (C) 2024 Gerry Hobbs
+ * bassnfool2@gmail.com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
 import java.io.File;
 import java.io.IOException;
 
@@ -11,6 +31,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 
 
@@ -21,6 +42,8 @@ public class HomeBudgetInit extends Application {
 			HomeBudgetController homeBudgetController = new HomeBudgetController();
 			
 			Scene homeBudgetScene = new Scene(homeBudgetController);
+			primaryStage.setTitle("HomeBudget");
+			primaryStage.getIcons().add(new Image(HomeBudgetController.class.getResourceAsStream("icons/HB.png")));
 			primaryStage.setScene(homeBudgetScene);			
 			primaryStage.setMaximized(true);
 			loadConfig(homeBudgetController);
@@ -31,21 +54,12 @@ public class HomeBudgetInit extends Application {
 	}
 	
 	private void loadConfig(HomeBudgetController homeBudgetController) {
-		if ( Settings.config.getProperty("recent.files") != null && !Settings.config.getProperty("recent.files").trim().equals("")) {
+		homeBudgetController.initOpenRecent();
+		if ( Settings.config != null && Settings.config.getProperty("recent.files") != null && !Settings.config.getProperty("recent.files").trim().equals("")) {
 			String[] recentFiles = Settings.config.getProperty("recent.files").split(",");
 			homeBudgetController.setHomeBudgetDb(recentFiles[0]);
 		} else {
-			DirectoryChooser fileChooser = new DirectoryChooser();
-			//File selectedFile = fileChooser.showOpenDialog((Stage)this.getScene().getWindow());
-			File selectedFile = fileChooser.showDialog(homeBudgetController.getScene().getWindow());
-			if ( selectedFile.exists()) {
-				if ( selectedFile.isDirectory()) {
-					if ( selectedFile.list().length == 0) {
-						homeBudgetController.setIsNewFile(true);
-					}
-					homeBudgetController.setHomeBudgetDb(selectedFile.getAbsolutePath());
-				}
-			}
+			homeBudgetController.openFile();
 		}
 
 	}
@@ -57,7 +71,11 @@ public class HomeBudgetInit extends Application {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		HomeBudgetController.setDBType(args[0]);
+		String type = "derby";
+		if ( args.length > 0) {
+			type = args[0];
+		}
+		HomeBudgetController.setDBType(type);
 		launch(args);
 	}
 }

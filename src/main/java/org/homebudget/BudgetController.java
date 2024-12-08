@@ -1,14 +1,36 @@
 package org.homebudget;
 
+/*
+ * Copyright (C) 2024 Gerry Hobbs
+ * bassnfool2@gmail.com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 import java.awt.Button;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Date;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.function.UnaryOperator;
 
 import org.homebudget.data.Budget;
 import org.homebudget.data.BudgetItem;
@@ -30,11 +52,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
+import javafx.util.converter.DoubleStringConverter;
 
 public class BudgetController  extends VBox implements PayeeAddedListener, IncomeAddedListener {
     @FXML private GridPane grid;
@@ -59,8 +85,8 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Payee.addPayeeAddedListener(this);
-		FundSource.addFunAddedListener(this);
+
+	   FundSource.addFunAddedListener(this);
 	}
 	
 	public void setBudget(Budget budget) throws Exception {
@@ -100,6 +126,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			grid.add(label, 0, payeeindex);
 			for ( int paydayCounter = 1; paydayCounter <= paydayCount; paydayCounter++) {
 				TextField textField = new TextField("");
+				//textField.setTextFormatter(getCurrencyTextFormatter());
 				textField.setMinWidth(150);
 				textField.setMaxWidth(150);
 				textField.setPrefWidth(150);
@@ -411,5 +438,37 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public TextFormatter<Double> getCurrencyTextFormatter() {
+	    UnaryOperator<Change> Double_Filter = change -> {
+	        String Demo_Text = change.getControlNewText();
+	        if (Demo_Text.matches("-?([1-9][0-9]*)?")) {
+	          return change;
+	        } else if ("-".equals(change.getText())) {
+	          if (change.getControlText().startsWith("-")) {
+	            change.setText("");
+	            change.setRange(0, 1);
+	            change.setCaretPosition(change.getCaretPosition() - 2);
+	            change.setAnchor(change.getAnchor() - 2);
+	            return change;
+	          } else {
+	            change.setRange(0, 0);
+	            return change;
+	          }
+	        }
+	        return null;
+	      };
+	      StringConverter<Double> String_Converter = new DoubleStringConverter() {
+		      @Override
+		      public Double fromString(String s) {
+		        if (s.isEmpty())
+		          return 0.0;
+		        return super.fromString(s);
+		      }
+		    };
+
+		  return new TextFormatter<Double>(String_Converter, 0.0, Double_Filter);
+		
 	}
 }

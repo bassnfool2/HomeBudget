@@ -1,7 +1,28 @@
 package org.homebudget.db;
 
+/*
+ * Copyright (C) 2024 Gerry Hobbs
+ * bassnfool2@gmail.com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -38,9 +59,13 @@ public class DbUtils {
 		System.out.println(DbUtils.class.getResource("derby.sql").toURI());
 		Statement statement = HomeBudgetController.getDbConnection().createStatement();
 		
-		List<String> sqlScript = Files.readAllLines(
-			    Paths.get(DbUtils.class.getResource("derby.sql").toURI()), Charset.defaultCharset());
+		List<String> sqlScript = new ArrayList<String>();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(DbUtils.class.getResourceAsStream("derby.sql")));
 
+		String inLine = null;
+		while ((inLine = reader.readLine()) != null ) {
+			sqlScript.add(inLine);
+		}
 		StringBuilder commandBuilder = new StringBuilder("");
 		for ( String line : sqlScript) {
 			if ( line.startsWith("--") || line.trim().isEmpty()) continue;

@@ -1,5 +1,25 @@
 package org.homebudget;
 
+/*
+ * Copyright (C) 2024 Gerry Hobbs
+ * bassnfool2@gmail.com
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -37,18 +57,22 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 
 public class HomeBudgetController extends VBox  {
@@ -107,6 +131,7 @@ public class HomeBudgetController extends VBox  {
     @FXML private HBox passwordHBox;
     @FXML private TabPane tabbedPane;
     @FXML private PasswordField passwordTextField;
+    @FXML private Menu openRecentMenu;
     public boolean isNewFile = false;
 
     
@@ -127,8 +152,6 @@ public class HomeBudgetController extends VBox  {
     
     public void unlockDb() {
 		try {
-//			initDb("/home/ghobbs/Documents/zbudget.db","sqlite");
-//			initDb("/home/ghobbs/Development/java/HomeBudget/hb.db","derby", passwordTextField.getText());
 			initDb(homeBudgetDb,"derby", passwordTextField.getText());
 			passwordHBox.setVisible(false);
 			tabbedPane.setVisible(true);
@@ -143,6 +166,19 @@ public class HomeBudgetController extends VBox  {
 			System.exit(1);
 		}
     }
+
+	protected void initOpenRecent() {
+		if ( Settings.config == null || Settings.config.getProperty("recent.files") == null || !Settings.config.getProperty("recent.files").trim().equals("")) return;
+		System.out.println(Settings.config.getProperty("recent.files"));
+		for ( String filePathS : Settings.config.getProperty("recent.files").split(",")) {
+			MenuItem menuItem = new MenuItem(filePathS);
+			menuItem.setOnAction((ActionEvent event) -> {
+	            System.out.println("open recent selected...");
+	            setHomeBudgetDb(((MenuItem)event.getSource()).getText());
+	        });
+			openRecentMenu.getItems().add(menuItem);
+		}
+	}
 
 	private void loadBudgets() throws Exception {
 		Budget.load();
@@ -256,15 +292,27 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 
 	public void openFile() {
-		System.out.println("open file");
+		DirectoryChooser fileChooser = new DirectoryChooser();
+		//File selectedFile = fileChooser.showOpenDialog((Stage)this.getScene().getWindow());
+		File selectedFile = fileChooser.showDialog(this.getScene().getWindow());
+		if ( selectedFile.exists()) {
+			if ( selectedFile.isDirectory()) {
+				if ( selectedFile.list().length == 0) {
+					this.setIsNewFile(true);
+				}
+				this.setHomeBudgetDb(selectedFile.getAbsolutePath());
+			}
+		}
 	}
 
 	public void saveFile() {
-		System.out.println("save file");
+		if ( budgetTab.getContent() instanceof BudgetController) {
+			((BudgetController)budgetTab.getContent()).saveBudget();
+		}
 	}
 
 	public void newFile() {
-		System.out.println("new file");
+		openFile();
 	}
 
 	public void quit() {
@@ -422,5 +470,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 		this.isNewFile = b;
 	}
 	
-
+	public void openRecentFileSelected() {
+		System.out.println("here");
+	}
 }

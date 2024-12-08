@@ -1,0 +1,41 @@
+app-id: org.homebudget.HomeBudget
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.openjdk17
+command: home-budget
+
+finish-args:
+  - --socket=x11
+  - --share=ipc
+  - --env=PATH=/app/jre/bin:/app/bin:/usr/bin
+  - --env=JAVA_HOME=/app/jre
+  - --filesystem=home
+
+modules:
+  - name: openjdk
+    buildsystem: simple
+    build-commands:
+      - /usr/lib/sdk/openjdk17/install.sh
+  - name: HomeBudget
+    buildsystem: simple
+    build-options:
+      env:
+        PATH: /app/bin:/usr/bin:/usr/lib/sdk/openjdk17/bin
+        JAVA_HOME: /usr/lib/sdk/openjdk17/jvm/openjdk-17
+    build-commands:
+      - tar -xf HomeBudget-1.0.0.tar.gz
+      - mkdir /app/share
+      - cp -r ./HomeBudget2.jar /app/share/HomeBudget2.jar
+      - cp -r ./javafx-sdk-17 /app/share/javafx-sdk-17
+      - install -Dm644 org.homebudget.HomeBudget.desktop /app/share/applications/org.homebudget.HomeBudget.desktop
+      - install -Dm755 HomeBudget.sh /app/bin/home-budget
+    sources:
+      - type: file
+        dest-filename: HomeBudget-1.0.0.tar.gz
+        url: file:///home/ghobbs/Development/java/HomeBudget/HomeBudget-1.0.0.tar.gz
+        sha256: 7865d69aa35d66a0c13801fcb82a45360473c786c5fd0ea65c7efd89879db0a2
+        commands:
+          - exec java --module-path /app/share/javafx-sdk-17/lib --add-modules javafx.controls,javafx.fxml -jar /app/share/HomeBudget2.jar $@
+ 
