@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.homebudget.HomeBudgetController;
 import org.homebudget.IncomeAddedListener;
-import org.homebudget.PayeeAddedListener;
 import org.homebudget.db.DbUtils;
 
 public class FundSource {
@@ -110,7 +109,7 @@ public class FundSource {
 		this.defaultPayAmount = defaultPayAmount;
 	}
 	public static void setIncomes(ArrayList<FundSource> incomes) {
-		incomes = incomes;
+		FundSource.incomes = incomes;
 	}
 	public void setId(int id) {
 		this.id = id;
@@ -152,7 +151,6 @@ public class FundSource {
 		final int PAY_FREQUENCY = i++;
 		final int NEXT_PAY_DATE = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"income\"\n"
 					+ "(name, budgetedPay, payFrequency, nextPayDate)\n"
@@ -178,7 +176,6 @@ public class FundSource {
 		final int NEXT_PAY_DATE = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"income\"\n"
 					+ "SET name=?, budgetedPay=?, payFrequency=?, nextPayDate=?\n"

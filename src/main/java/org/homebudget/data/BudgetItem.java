@@ -24,7 +24,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.homebudget.HomeBudgetController;
@@ -133,7 +132,6 @@ public class BudgetItem {
 		final int PAYED = i++;
 		final int PAYDATE = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"budgetItem\"\n"
 					+ "(payday_id, payee_id, amount, payed, payDate)\n"
@@ -145,7 +143,6 @@ public class BudgetItem {
 			stmt.setDate(PAYDATE, payDate);
 			int updated = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
-			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
@@ -161,7 +158,6 @@ public class BudgetItem {
 		final int PAYDATE = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"budgetItem\"\n"
 					+ "SET payday_id=?, payee_id=?, amount=?, payed=?, payDate=?\n"

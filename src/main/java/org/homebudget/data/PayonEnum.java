@@ -19,9 +19,6 @@ package org.homebudget.data;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-import java.util.HashMap;
-import java.util.Map;
-
 public enum PayonEnum {
 	ON_SELECTED_PAYDAY(0),
     FIRST(1),

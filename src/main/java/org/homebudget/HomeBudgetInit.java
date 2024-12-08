@@ -23,16 +23,12 @@ package org.homebudget;
  */
 
 
-import java.io.File;
 import java.io.IOException;
 
 import javafx.application.Application;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.layout.BorderPane;
 
 
 public class HomeBudgetInit extends Application {
@@ -57,7 +53,7 @@ public class HomeBudgetInit extends Application {
 		homeBudgetController.initOpenRecent();
 		if ( Settings.config != null && Settings.config.getProperty("recent.files") != null && !Settings.config.getProperty("recent.files").trim().equals("")) {
 			String[] recentFiles = Settings.config.getProperty("recent.files").split(",");
-			homeBudgetController.setHomeBudgetDb(recentFiles[0]);
+			HomeBudgetController.setHomeBudgetDb(recentFiles[0]);
 		} else {
 			homeBudgetController.openFile();
 		}
@@ -68,7 +64,6 @@ public class HomeBudgetInit extends Application {
 		try {
 			Settings.loadProperties();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		String type = "derby";

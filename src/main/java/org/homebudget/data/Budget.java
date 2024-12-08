@@ -28,7 +28,6 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import org.homebudget.HomeBudgetController;
 import org.homebudget.db.DbUtils;
@@ -108,20 +107,15 @@ public class Budget {
 		int i = 1;
 		final int DATE = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
-		String [] colNames = new String [] { "id" };
-
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"budget\"\n"
 					+ "(budgetDate)\n"
 					+ "VALUES(?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setDate(DATE, date);
-			//intt updated = 
-			stmt.executeUpdate();
+			int updated = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
-			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			Budget.getBudgets().add(this);
-			return 1;
+			return updated;
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}
@@ -132,7 +126,6 @@ public class Budget {
 		final int DATE = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"budget\"\n"
 					+ "SET budgetDate=?\n"
@@ -208,7 +201,6 @@ public class Budget {
 	}
 
 	public static void getFundDrop(FundSource fundSource, Budget budget) throws Exception {
-		ArrayList<Payday> paydays = new ArrayList<Payday>();
 		Payday payday = null;
 		Date paydate =fundSource.getFirstPayDate(); 
 		switch ( fundSource.payFrequency) {
@@ -238,6 +230,9 @@ public class Budget {
 				payday.save();
 				paydate = Date.valueOf(paydate.toLocalDate().plusWeeks(1));
 			}
+			break;
+		case TWICE_MONTHLY:
+			// not yet implemented
 			break;
 		}
 	}

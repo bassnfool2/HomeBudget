@@ -28,23 +28,16 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.homebudget.data.Budget;
-import org.homebudget.data.BudgetItem;
 import org.homebudget.data.FundSource;
 import org.homebudget.data.FundSource.PayFrequency;
-import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
 import org.homebudget.db.DbUtils;
-import org.homebudget.PayonSelectController;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -52,26 +45,18 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 
@@ -182,9 +167,6 @@ public class HomeBudgetController extends VBox  {
 
 	private void loadBudgets() throws Exception {
 		Budget.load();
-/*
-column.setCellFactory(TextFieldTableCell.forTableColumn());
- */
 		RowConstraints rowConstraints = new RowConstraints();
 		rowConstraints.setPrefHeight(30);
 		ColumnConstraints columnConstraints = new ColumnConstraints();
@@ -300,7 +282,7 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 				if ( selectedFile.list().length == 0) {
 					this.setIsNewFile(true);
 				}
-				this.setHomeBudgetDb(selectedFile.getAbsolutePath());
+				HomeBudgetController.setHomeBudgetDb(selectedFile.getAbsolutePath());
 			}
 		}
 	}
@@ -386,9 +368,6 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 	
 	public void payeeSelected(MouseEvent event) {
-//		int rowIndex = payeeTableView.getSelectionModel().getSelectedIndex();
-        //int columnIndex = payeeTableView.getColumns().indexOf(((TableView<Payee>)event.getSource()).getClickedColumn());
-
         // Handle the click event based on the row and column indices
         if (event.getClickCount() == 2) { // double click
             // Handle double click on specific row and column
@@ -398,9 +377,6 @@ column.setCellFactory(TextFieldTableCell.forTableColumn());
     }
 	
 	public void incomeSelected(MouseEvent event) {
-//		int rowIndex = incomeTableView.getSelectionModel().getSelectedIndex();
-        //int columnIndex = payeeTableView.getColumns().indexOf(((TableView<Payee>)event.getSource()).getClickedColumn());
-
         // Handle the click event based on the row and column indices
         if (event.getClickCount() == 2) { // double click
             // Handle double click on specific row and column

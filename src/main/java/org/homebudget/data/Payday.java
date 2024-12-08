@@ -28,7 +28,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.homebudget.HomeBudgetController;
-import org.homebudget.data.FundSource.PayFrequency;
 import org.homebudget.db.DbUtils;
 
 public class Payday {
@@ -119,7 +118,6 @@ public class Payday {
 		final int BUDGET_ID = i++;
 		final int AMOUNT = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("INSERT INTO \"payday\"\n"
 					+ "(payDate, income_id, budget_id, amount)\n"
@@ -146,7 +144,6 @@ public class Payday {
 		final int AMOUNT = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("UPDATE \"payday\"\n"
 					+ "SET payDate=?, income_id = ?, amount = ?\n"

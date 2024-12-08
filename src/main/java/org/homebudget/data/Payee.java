@@ -19,23 +19,12 @@ package org.homebudget.data;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 
 import org.homebudget.HomeBudgetController;
 import org.homebudget.PayeeAddedListener;
@@ -200,7 +189,6 @@ public class Payee {
 		final int BALANCE = i++;
 		final int INCOME_ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("insert into \"payee\" (name, url, username, password, due_on, budgetedPayment, balance, income_id) values (?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 			stmt.setString(NAME, name);
@@ -213,7 +201,6 @@ public class Payee {
 			stmt.setInt(INCOME_ID, paywithFundSource.getId());
 			int updated = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
-			//id = Long.valueOf(HomeBudgetController.getDbConnection().createStatement().executeQuery("SELECT last_insert_rowid()").getLong(1)).intValue();
 			Payee.add(this);
 			return updated;
 		} finally {
@@ -233,7 +220,6 @@ public class Payee {
 		final int INCOME_ID = i++;
 		final int ID = i++;
 		PreparedStatement stmt = null;
-		ResultSet rset = null;
 		try {
 			stmt = HomeBudgetController.getDbConnection().prepareStatement("update \"payee\" set name = ?, url = ?, username=?, password=?, due_on=?, budgetedPayment=?, balance=?, income_id=? where id = ?");
 			stmt.setString(NAME, name);
