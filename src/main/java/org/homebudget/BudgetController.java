@@ -22,6 +22,7 @@ package org.homebudget;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -183,7 +184,8 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 				String url = ((BudgetItem)textField.getUserData()).getPayee().getUrl();
 				Runtime runtime = Runtime.getRuntime();
 				try {
-					runtime.exec("xdg-open " + url); // for Unix/Linux
+					String[] args = {"xdg-open", url};
+					runtime.exec(args); // for Unix/Linux
 					// runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -227,6 +229,12 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
 				TextField textField = (TextField)contextMenu.getUserData();
 				((BudgetItem)textField.getUserData()).setPayed(true);
+				try {
+					((BudgetItem)textField.getUserData()).save();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				textField.setStyle("-fx-control-inner-background: #008000;");
 			}
 		});

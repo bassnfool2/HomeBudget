@@ -72,7 +72,13 @@ public class BudgetItem {
 	public void setPayed(boolean payed) {
 		this.payed = payed;
 		if ( payed && !prevPaid && this.getPayee().getBalance() != 0) {
-			this.getPayee().setBalance(this.getPayee().getBalance() - amount); 
+			this.getPayee().setBalance(this.getPayee().getBalance() - amount);
+			try {
+				this.getPayee().save();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -53,6 +53,7 @@ public class HomeBudgetInit extends Application {
 		homeBudgetController.initOpenRecent();
 		if ( Settings.config != null && Settings.config.getProperty("recent.files") != null && !Settings.config.getProperty("recent.files").trim().equals("")) {
 			String[] recentFiles = Settings.config.getProperty("recent.files").split(",");
+			homeBudgetController.setRecentFiles(recentFiles);
 			HomeBudgetController.setHomeBudgetDb(recentFiles[0]);
 		} else {
 			homeBudgetController.openFile();

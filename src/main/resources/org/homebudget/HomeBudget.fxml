@@ -336,25 +336,46 @@
                   </Tab>
               </tabs>
             </TabPane>
-            <HBox fx:id="passwordHBox" prefHeight="100.0" prefWidth="200.0">
+            <VBox fx:id="passwordVBox" prefHeight="200.0" prefWidth="100.0">
                <children>
-                  <Label prefHeight="24.0" text="Password:">
-                     <HBox.margin>
-                        <Insets left="50.0" top="200.0" />
-                     </HBox.margin>
-                  </Label>
-                  <PasswordField fx:id="passwordTextField" prefHeight="24.0" prefWidth="705.0" promptText="enter password">
-                     <HBox.margin>
-                        <Insets left="10.0" top="200.0" />
-                     </HBox.margin>
-                  </PasswordField>
-                  <Button mnemonicParsing="false" onAction="#unlockDb" text="Unlock">
-                     <HBox.margin>
-                        <Insets top="200.0" />
-                     </HBox.margin>
-                  </Button>
+                  <HBox prefWidth="200.0">
+                     <children>
+                        <Label prefHeight="24.0" text="File:">
+                           <padding>
+                              <Insets left="87.0" />
+                           </padding>
+                        </Label>
+                        <ComboBox fx:id="fileComboBox" onAction="#fileSelected" prefWidth="768.0">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </ComboBox>
+                     </children>
+                     <VBox.margin>
+                        <Insets top="180.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <HBox prefWidth="200.0">
+                     <children>
+                        <Label prefHeight="24.0" text="Password:">
+                           <HBox.margin>
+                              <Insets left="50.0" top="5.0" />
+                           </HBox.margin>
+                        </Label>
+                        <PasswordField fx:id="passwordTextField" prefHeight="24.0" prefWidth="705.0" promptText="enter password">
+                           <HBox.margin>
+                              <Insets left="10.0" top="5.0" />
+                           </HBox.margin>
+                        </PasswordField>
+                        <Button mnemonicParsing="false" onAction="#unlockDb" text="Unlock">
+                           <HBox.margin>
+                              <Insets top="5.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
          </children>
       </StackPane>
   </children>

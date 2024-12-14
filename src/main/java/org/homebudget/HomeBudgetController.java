@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import org.homebudget.data.Budget;
 import org.homebudget.data.FundSource;
 import org.homebudget.data.FundSource.PayFrequency;
+import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
 import org.homebudget.db.DbUtils;
 
@@ -94,6 +95,7 @@ public class HomeBudgetController extends VBox  {
     @FXML private TextField payeeBudgetedPaymentTextField;
     @FXML private TextField payeeBalanceTextField;
     @FXML private ComboBox<FundSource> payeeIncomeComboBox;
+    @FXML private ComboBox<String> fileComboBox;
     @FXML private PayonSelectController payonSelectController;
     
     @FXML private TableView<Payee> payeeTableView;
@@ -113,7 +115,7 @@ public class HomeBudgetController extends VBox  {
     @FXML private TableColumn<FundSource, String> incomePayFrequencyTableColumn;
     @FXML private TableColumn<FundSource, Double> incomeBudgetedAmountTableColumn;
     @FXML private Tab budgetTab;
-    @FXML private HBox passwordHBox;
+    @FXML private VBox passwordVBox;
     @FXML private TabPane tabbedPane;
     @FXML private PasswordField passwordTextField;
     @FXML private Menu openRecentMenu;
@@ -138,7 +140,7 @@ public class HomeBudgetController extends VBox  {
     public void unlockDb() {
 		try {
 			initDb(homeBudgetDb,"derby", passwordTextField.getText());
-			passwordHBox.setVisible(false);
+			passwordVBox.setVisible(false);
 			tabbedPane.setVisible(true);
 			incomePayfrequencyComboBox.getItems().setAll(PayFrequency.values());
 			loadIncome();
@@ -153,13 +155,14 @@ public class HomeBudgetController extends VBox  {
     }
 
 	protected void initOpenRecent() {
-		if ( Settings.config == null || Settings.config.getProperty("recent.files") == null || !Settings.config.getProperty("recent.files").trim().equals("")) return;
+		if ( Settings.config == null || Settings.config.getProperty("recent.files") == null || Settings.config.getProperty("recent.files").trim().equals("")) return;
 		System.out.println(Settings.config.getProperty("recent.files"));
 		for ( String filePathS : Settings.config.getProperty("recent.files").split(",")) {
 			MenuItem menuItem = new MenuItem(filePathS);
 			menuItem.setOnAction((ActionEvent event) -> {
 	            System.out.println("open recent selected...");
-	            setHomeBudgetDb(((MenuItem)event.getSource()).getText());
+	            closeDB();
+	            fileComboBox.getSelectionModel().select(((MenuItem)event.getSource()).getText());	    
 	        });
 			openRecentMenu.getItems().add(menuItem);
 		}
@@ -274,6 +277,7 @@ public class HomeBudgetController extends VBox  {
 	}
 
 	public void openFile() {
+		closeDB();
 		DirectoryChooser fileChooser = new DirectoryChooser();
 		//File selectedFile = fileChooser.showOpenDialog((Stage)this.getScene().getWindow());
 		File selectedFile = fileChooser.showDialog(this.getScene().getWindow());
@@ -283,6 +287,11 @@ public class HomeBudgetController extends VBox  {
 					this.setIsNewFile(true);
 				}
 				HomeBudgetController.setHomeBudgetDb(selectedFile.getAbsolutePath());
+				if ( !fileComboBox.getItems().contains(selectedFile.getAbsolutePath())) {
+					fileComboBox.getItems().add(selectedFile.getAbsolutePath());
+				}
+					
+				fileComboBox.getSelectionModel().select(selectedFile.getAbsolutePath());
 			}
 		}
 	}
@@ -446,7 +455,26 @@ public class HomeBudgetController extends VBox  {
 		this.isNewFile = b;
 	}
 	
-	public void openRecentFileSelected() {
-		System.out.println("here");
+	public void fileSelected() {
+		HomeBudgetController.setHomeBudgetDb(fileComboBox.getSelectionModel().getSelectedItem());
+	}
+
+	public void setRecentFiles(String[] recentFiles) {
+		for ( String fileName : recentFiles ) fileComboBox.getItems().add(fileName);
+		fileComboBox.getSelectionModel().select(0);
+	}
+	
+	public void closeDB() {
+		Budget.getBudgets().clear();
+		Payee.getPayees().clear();
+		FundSource.getFundSources().clear();
+		try {
+			getDbConnection().close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		passwordVBox.setVisible(true);
+		tabbedPane.setVisible(false);
 	}
 }

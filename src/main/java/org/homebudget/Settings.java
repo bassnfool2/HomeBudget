@@ -51,7 +51,7 @@ public class Settings {
 	public static void saveProperties() throws IOException {
 		String currentFile = HomeBudgetController.getHomeBudgetDb();
 		StringBuilder newRecentFiles = new StringBuilder(currentFile);
-		if (!( Settings.config.getProperty("recent.files") == null || !Settings.config.getProperty("recent.files").trim().equals(""))) {
+		if (!( Settings.config.getProperty("recent.files") == null || Settings.config.getProperty("recent.files").trim().equals(""))) {
 			String[] recentFiles = config.getProperty("recent.files").split(",");
 			int counter = 0;
 			for ( String filePath : recentFiles) {

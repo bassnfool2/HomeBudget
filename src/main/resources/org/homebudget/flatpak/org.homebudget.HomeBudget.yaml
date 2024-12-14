@@ -3,7 +3,7 @@ runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.openjdk17
+  - org.freedesktop.Sdk.Extension.openjdk21
 command: home-budget
 
 finish-args:
@@ -17,25 +17,27 @@ modules:
   - name: openjdk
     buildsystem: simple
     build-commands:
-      - /usr/lib/sdk/openjdk17/install.sh
+      - /usr/lib/sdk/openjdk21/install.sh
   - name: HomeBudget
     buildsystem: simple
     build-options:
       env:
-        PATH: /app/bin:/usr/bin:/usr/lib/sdk/openjdk17/bin
-        JAVA_HOME: /usr/lib/sdk/openjdk17/jvm/openjdk-17
+        PATH: /app/bin:/usr/bin:/usr/lib/sdk/openjdk21/bin
+        JAVA_HOME: /usr/lib/sdk/openjdk21/jvm/openjdk-21
     build-commands:
-      - tar -xf HomeBudget-1.0.0.tar.gz
+      - tar -xf HomeBudget.tar.gz
       - mkdir /app/share
-      - cp -r ./HomeBudget2.jar /app/share/HomeBudget2.jar
-      - cp -r ./javafx-sdk-17 /app/share/javafx-sdk-17
+      - cp -r ./HomeBudget.jar /app/share/HomeBudget.jar
+      - cp -r ./javafx-sdk-21.0.5 /app/share/javafx-sdk-21
       - install -Dm644 org.homebudget.HomeBudget.desktop /app/share/applications/org.homebudget.HomeBudget.desktop
+      - install -Dm644 HB.png /app/share/applications/org.homebudget.HomeBudget.png
+      - install -Dm644 HB.png /app/share/icons/hicolor/32x32/apps/org.homebudget.HomeBudget.png
       - install -Dm755 HomeBudget.sh /app/bin/home-budget
     sources:
       - type: file
-        dest-filename: HomeBudget-1.0.0.tar.gz
-        url: file:///home/ghobbs/Development/java/HomeBudget/HomeBudget-1.0.0.tar.gz
-        sha256: 7865d69aa35d66a0c13801fcb82a45360473c786c5fd0ea65c7efd89879db0a2
+        dest-filename: HomeBudget.tar.gz
+        url: https://github.com/user-attachments/files/18055735/HomeBudget-1.1.0.tar.gz
+        sha256: 9b67b00072d75b9a47a56fe24f5db52a0e273fcbeffaa3c432f3e0f073ac1810
         commands:
-          - exec java --module-path /app/share/javafx-sdk-17/lib --add-modules javafx.controls,javafx.fxml -jar /app/share/HomeBudget2.jar $@
+          - exec java --module-path /app/share/javafx-sdk-21/lib --add-modules javafx.controls,javafx.fxml -jar /app/share/HomeBudget.jar $@
  
