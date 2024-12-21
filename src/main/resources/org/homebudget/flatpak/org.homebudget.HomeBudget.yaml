@@ -36,8 +36,8 @@ modules:
     sources:
       - type: file
         dest-filename: HomeBudget.tar.gz
-        url: https://github.com/user-attachments/files/18055735/HomeBudget-1.1.0.tar.gz
-        sha256: 9b67b00072d75b9a47a56fe24f5db52a0e273fcbeffaa3c432f3e0f073ac1810
+        url: https://github.com/user-attachments/files/18134167/HomeBudget-1.1.0.tar.gz
+        sha256: 977e157d04da1a5cac9f3fd79b4870a3c7cc1e9b2a0260f2525f5037bf88433e
         commands:
           - exec java --module-path /app/share/javafx-sdk-21/lib --add-modules javafx.controls,javafx.fxml -jar /app/share/HomeBudget.jar $@
  

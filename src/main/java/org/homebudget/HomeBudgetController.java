@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import org.homebudget.data.Budget;
 import org.homebudget.data.FundSource;
 import org.homebudget.data.FundSource.PayFrequency;
-import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
 import org.homebudget.db.DbUtils;
 
@@ -52,7 +51,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -465,12 +463,18 @@ public class HomeBudgetController extends VBox  {
 	}
 	
 	public void closeDB() {
-		Budget.getBudgets().clear();
-		Payee.getPayees().clear();
-		FundSource.getFundSources().clear();
+		if (!(Budget.getBudgets() == null || Budget.getBudgets().isEmpty())) { 
+			Budget.getBudgets().clear();
+		}
+		if (!(Payee.getPayees() == null || Payee.getPayees().isEmpty())) { 
+			Payee.getPayees().clear();
+		}
+		if (!(FundSource.getFundSources() == null || FundSource.getFundSources().isEmpty())) { 
+			FundSource.getFundSources().clear();
+		}
 		try {
 			getDbConnection().close();
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

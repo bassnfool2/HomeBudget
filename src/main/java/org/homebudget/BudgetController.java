@@ -264,6 +264,15 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		((TextField)vbox.getChildren().get(1)).setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
 	}
 
+	public void paydayTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
+		Payday payday = ((Payday)textField.getUserData());
+    	payday.setAmount(newValue.isBlank() ? 0 :  Double.parseDouble(newValue));
+        VBox vbox = (VBox)budgetPaydayTotalsHBox.getChildren().get(paydayToColumn.get(payday));
+        double[] totals = computePaydayTotals(payday);
+		((TextField)vbox.getChildren().get(0)).setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		((TextField)vbox.getChildren().get(1)).setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
+	}
+
 	private void initGridHeaderHBox(Budget budget2) {
 		Node payeesLabel = gridHeaderHBox.getChildren().get(0);
 		gridHeaderHBox.getChildren().clear();
@@ -332,6 +341,20 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		textField.setPrefWidth(150);
 		textField.setMaxWidth(150);
 		textField.setText(payday.getAmount().toString());
+		textField.setUserData(payday);
+		textField.textProperty().addListener(new ChangeListener<String>() {
+		    @Override
+		    public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+		    	TextField focusedTextField = (TextField) getScene().focusOwnerProperty().get();
+		    	try {
+					paydayTextFieldChanged(focusedTextField, oldValue, newValue);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+
+		});
 		
 		vbox.getChildren().add(payeeNameLabel);
 		vbox.getChildren().add(paydayDateLabel);
