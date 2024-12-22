@@ -24,6 +24,7 @@ package org.homebudget;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -38,6 +39,9 @@ public class HomeBudgetInit extends Application {
 			HomeBudgetController homeBudgetController = new HomeBudgetController();
 			
 			Scene homeBudgetScene = new Scene(homeBudgetController);
+			//InputStream cssInputStream = getClass().getResourceAsStream("/path/to/your/css/file.css");
+			//homeBudgetScene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+
 			primaryStage.setTitle("HomeBudget");
 			primaryStage.getIcons().add(new Image(HomeBudgetController.class.getResourceAsStream("icons/HB.png")));
 			primaryStage.setScene(homeBudgetScene);			

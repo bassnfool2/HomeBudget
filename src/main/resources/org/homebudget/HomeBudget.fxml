@@ -302,7 +302,7 @@
                               <Insets left="10.0" top="5.0" />
                            </HBox.margin>
                         </PasswordField>
-                        <Button mnemonicParsing="false" onAction="#unlockDb" text="Unlock">
+                        <Button fx:id="unlockButton" defaultButton="true" mnemonicParsing="false" onAction="#unlockDb" text="Unlock">
                            <HBox.margin>
                               <Insets top="5.0" />
                            </HBox.margin>

@@ -22,6 +22,7 @@ package org.homebudget;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Connection;
@@ -45,6 +46,10 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Menu;
@@ -53,10 +58,13 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.SVGPath;
 import javafx.stage.DirectoryChooser;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 
 public class HomeBudgetController extends VBox  {
@@ -117,6 +125,12 @@ public class HomeBudgetController extends VBox  {
     @FXML private TabPane tabbedPane;
     @FXML private PasswordField passwordTextField;
     @FXML private Menu openRecentMenu;
+    @FXML private Button openFileButton;
+    @FXML private Button newFileButton;
+    @FXML private Button saveFileButton;
+    @FXML private Button quitButton;
+    @FXML private Button unlockButton;
+    
     public boolean isNewFile = false;
 
     
@@ -133,9 +147,23 @@ public class HomeBudgetController extends VBox  {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+//		SVGPath svgPath = new SVGPath();
+//		svgPath.setContent("m 8 0 c -0.550781 0 -1 0.449219 -1 1 v 8.585938 l -1.292969 -1.292969 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 s -0.519531 0.105469 -0.707031 0.292969 c -0.390625 0.390625 -0.390625 1.023437 0 1.414062 l 3 3 c 0.390625 0.390625 1.023437 0.390625 1.414062 0 l 3 -3 c 0.390625 -0.390625 0.390625 -1.023437 0 -1.414062 s -1.023437 -0.390625 -1.414062 0 l -1.292969 1.292969 v -8.585938 c 0 -0.550781 -0.449219 -1 -1 -1 z m -7 14 v 2 h 14 v -2 z m ");
+//		openFileButton.setGraphic(svgPath);
+		openFileButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("document-open-symbolic.png"))));
+		openFileButton.setTooltip(new Tooltip("Open an existing budget"));
+		newFileButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("document-new-symbolic.png"))));
+		newFileButton.setTooltip(new Tooltip("Create a new budget"));
+		saveFileButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("document-save-symbolic.png"))));
+		saveFileButton.setTooltip(new Tooltip("Save this budget"));
+		quitButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("application-exit-symbolic.png"))));
+		quitButton.setTooltip(new Tooltip("Quit HomeBudget"));
+		unlockButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("unlock.png"))));
+		unlockButton.setTooltip(new Tooltip("Unlock file"));
+		System.out.println("here");
 	}
-    
-    public void unlockDb() {
+
+	public void unlockDb() {
 		try {
 			initDb(homeBudgetDb,"derby", passwordTextField.getText());
 			passwordVBox.setVisible(false);

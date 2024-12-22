@@ -260,8 +260,8 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
     	budgetItem.setAmount(newValue.isBlank() ? 0 :  Double.parseDouble(newValue));
         VBox vbox = (VBox)budgetPaydayTotalsHBox.getChildren().get(paydayToColumn.get(budgetItem.getPayday()));
         double[] totals = computePaydayTotals(budgetItem.getPayday());
-		((TextField)vbox.getChildren().get(0)).setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
-		((TextField)vbox.getChildren().get(1)).setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
+		((TextField)vbox.getChildren().get(0)).setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_OUT_INDEX]*100))/100));
+		((TextField)vbox.getChildren().get(1)).setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_LEFT_INDEX]*100))/100));		
 	}
 
 	public void paydayTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
@@ -269,8 +269,8 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
     	payday.setAmount(newValue.isBlank() ? 0 :  Double.parseDouble(newValue));
         VBox vbox = (VBox)budgetPaydayTotalsHBox.getChildren().get(paydayToColumn.get(payday));
         double[] totals = computePaydayTotals(payday);
-		((TextField)vbox.getChildren().get(0)).setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
-		((TextField)vbox.getChildren().get(1)).setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));		
+		((TextField)vbox.getChildren().get(0)).setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_OUT_INDEX]*100))/100));
+		((TextField)vbox.getChildren().get(1)).setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_LEFT_INDEX]*100))/100));		
 	}
 
 	private void initGridHeaderHBox(Budget budget2) {
