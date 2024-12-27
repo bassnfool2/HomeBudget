@@ -34,6 +34,8 @@ import javafx.scene.layout.VBox;
 public class PayonSelectController  extends VBox  {
     @FXML private GridPane grid;
     @FXML private TextField selectedDueOnLabel;
+    @FXML private VBox vbox;
+    
     PayonEnum selectedPayon = null;
 
 	public PayonSelectController() {
@@ -47,8 +49,9 @@ public class PayonSelectController  extends VBox  {
 			fxmlLoader.load();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return;
 		}
-
+		vbox.setPrefSize(250, 24.0);
 	}
     
 
@@ -64,6 +67,11 @@ public class PayonSelectController  extends VBox  {
 
 	public void toggleSelection() {
     	grid.setVisible(!grid.isVisible());
+    	if ( grid.isVisible() ) {
+    		vbox.setPrefSize(250, USE_COMPUTED_SIZE);
+    	} else {
+    		vbox.setPrefSize(250, 24.0);
+    	}
     }
 
     public void eachPaycheckSelected() {

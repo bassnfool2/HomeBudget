@@ -1,5 +1,8 @@
 package org.homebudget;
 
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+
 /*
  * Copyright (C) 2024 Gerry Hobbs
  * bassnfool2@gmail.com
@@ -34,6 +37,7 @@ import org.homebudget.data.Payday;
 import org.homebudget.data.Payee;
 import org.homebudget.data.PayonEnum;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -41,10 +45,14 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.GridPane;
@@ -56,11 +64,14 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
     @FXML private HBox gridHeaderHBox;
     @FXML private HBox budgetPaydayTotalsHBox;
     @FXML private Label budgetHeadLabel;
+    @FXML private Button nextButton;
+    @FXML private Button previousButton;
+    @FXML private Button saveBudgetButton;
 	Budget budget = null;
 	HashMap<Payee, Integer> payeeToRow = new HashMap<Payee, Integer>();
 	HashMap<Payday, Integer> paydayToColumn = new HashMap<Payday, Integer>();
 	SimpleDateFormat dateFormatter = new SimpleDateFormat("MM/dd/yyyy");
-	
+	BudgetItem currentBudgetItem = null;
 	TextField[][] gridTextFields = null;
 	public BudgetController() {
 		URL fxmlLocation = HomeBudgetController.class.getResource("Budget.fxml");
@@ -72,11 +83,22 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		try {
 			fxmlLoader.load();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return;
 		}
-
-	   FundSource.addFunAddedListener(this);
+		if ( nextButton != null ) {
+			nextButton.setGraphic(new ImageView(new Image(BudgetController.class.getResourceAsStream("go-next-symbolic.png"))));
+			nextButton.setTooltip(new Tooltip("Move to next month"));
+		}
+		if ( previousButton != null ) {
+			previousButton.setGraphic(new ImageView(new Image(BudgetController.class.getResourceAsStream("go-previous-symbolic.png"))));
+			previousButton.setTooltip(new Tooltip("Move to previous month"));
+		}
+		if ( saveBudgetButton != null ) {
+			saveBudgetButton.setGraphic(new ImageView(new Image(HomeBudgetController.class.getResourceAsStream("object-select-symbolic.png"))));
+			saveBudgetButton.setTooltip(new Tooltip("Save Budget"));
+		}
+		FundSource.addFunAddedListener(this);
 	}
 	
 	public void setBudget(Budget budget) throws Exception {
@@ -117,6 +139,12 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 				textField.setMinWidth(150);
 				textField.setMaxWidth(150);
 				textField.setPrefWidth(150);
+				textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+				    if (newValue) {
+				    	currentBudgetItem = (BudgetItem)textField.getUserData();
+				    } 
+				});
+
 				addContextMenu(textField);
 				BudgetItem budgetItem = null;
 				try {
@@ -150,12 +178,13 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 				    	try {
 							budgetItemTextFieldChanged(focusedTextField, oldValue, newValue);
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
+							HomeBudgetController.showErrorDialog("Unhandled error:\n"+e.getMessage());
 							e.printStackTrace();
 						}
 				    }
 
 				});
+				
 				gridTextFields[paydayCounter][payeeindex] = textField;
 				grid.add(textField, paydayCounter, payeeindex);				
 			}
@@ -181,15 +210,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			public void handle(ActionEvent event) {
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
 				TextField textField = (TextField)contextMenu.getUserData();
-				String url = ((BudgetItem)textField.getUserData()).getPayee().getUrl();
-				Runtime runtime = Runtime.getRuntime();
-				try {
-					String[] args = {"xdg-open", url};
-					runtime.exec(args); // for Unix/Linux
-					// runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
-				} catch (IOException e) {
-					e.printStackTrace();
-				}    					
+				payOnline(((BudgetItem)textField.getUserData()));
 			}
 		});
 		contextMenu.getItems().add(payonlineMenuItem);
@@ -200,9 +221,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			public void handle(ActionEvent event) {
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
 				TextField textField = (TextField)contextMenu.getUserData();
-				String username = ((BudgetItem)textField.getUserData()).getPayee().getUsername();
-
-				javafx.application.Platform.runLater(new BudgetClipboard(username)); 
+				copyUserName(((BudgetItem)textField.getUserData()));
 
 			}
 		});
@@ -214,10 +233,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			public void handle(ActionEvent event) {
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
 				TextField textField = (TextField)contextMenu.getUserData();
-				String password = ((BudgetItem)textField.getUserData()).getPayee().getPassword();
-
-				javafx.application.Platform.runLater(new BudgetClipboard(password)); 
-
+				copyPassword(((BudgetItem)textField.getUserData()));
 			}
 		});
 		contextMenu.getItems().add(copyPasswordMenuItem);
@@ -228,14 +244,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			public void handle(ActionEvent event) {
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
 				TextField textField = (TextField)contextMenu.getUserData();
-				((BudgetItem)textField.getUserData()).setPayed(true);
-				try {
-					((BudgetItem)textField.getUserData()).save();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				textField.setStyle("-fx-control-inner-background: #008000;");
+				markPaid((BudgetItem)textField.getUserData());
 			}
 		});
 		contextMenu.getItems().add(menuItem);
@@ -245,14 +254,39 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			@Override
 			public void handle(ActionEvent event) {
 				ContextMenu contextMenu = ((MenuItem)event.getSource()).getParentPopup();
-				TextField textField = (TextField)contextMenu.getUserData();
-				((BudgetItem)textField.getUserData()).setPayed(false);
-				textField.setStyle(null);
+				TextField textField = (TextField)contextMenu.getUserData();				
+				try {
+					((BudgetItem)textField.getUserData()).setPayed(false);
+					textField.setStyle(null);
+				} catch (SQLException e) {
+					HomeBudgetController.showErrorDialog("Unable to mark budget item as not paid. Error:\n"+e.getMessage());
+				}
 			}
 		});
 		contextMenu.getItems().add(notPaidMenuItem);
 		textField.setContextMenu(contextMenu);
 
+	}
+
+	protected void copyUserName(BudgetItem budgetItem) {
+		String username = budgetItem.getPayee().getUsername();
+
+		javafx.application.Platform.runLater(new BudgetClipboard(username)); 
+    	Platform.runLater(() -> gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())].requestFocus());
+	}
+
+	protected void payOnline(BudgetItem budgetItem) {
+		String url = budgetItem.getPayee().getUrl();
+		Runtime runtime = Runtime.getRuntime();
+		try {
+			String[] args = {"xdg-open", url};
+			runtime.exec(args); // for Unix/Linux
+			// runtime.exec("rundll32 url.dll,FileProtocolHandler " + url); // for Windows
+		} catch (IOException e) {
+			HomeBudgetController.showErrorDialog("Unable to pay online... Error:\n"+e.getMessage());
+			e.printStackTrace();
+		}    					
+    	Platform.runLater(() -> gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())].requestFocus());
 	}
 
 	public void budgetItemTextFieldChanged(TextField textField, String oldValue, String newValue) throws Exception {
@@ -291,6 +325,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 				for ( Payday payday : budget.getPaydays()) { payday.save();};
 			}
 		} catch ( Exception e) {
+			HomeBudgetController.showErrorDialog("Error saving budget... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -303,7 +338,9 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		}
 		try {
 			setBudget(nextBudget);
+			currentBudgetItem = null;
 		} catch (Exception e) {
+			HomeBudgetController.showErrorDialog("Error moving to previous budget... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -314,13 +351,15 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 			try {
 				nextBudget = Budget.createNextBudget(Date.valueOf(budget.getDate().toLocalDate().plusMonths(1)));
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				HomeBudgetController.showErrorDialog("Error creating next budget... Error:\n"+e.getMessage());
 				e.printStackTrace();
 			}
 		}
 		try {
 			setBudget(nextBudget);
+			currentBudgetItem = null;
 		} catch (Exception e) {
+			HomeBudgetController.showErrorDialog("Error moving to next budget... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -349,7 +388,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		    	try {
 					paydayTextFieldChanged(focusedTextField, oldValue, newValue);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					HomeBudgetController.showErrorDialog("Error handling payday text field change... Error:\n"+e.getMessage());
 					e.printStackTrace();
 				}
 		    }
@@ -370,13 +409,13 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		paydayTotalOutTextField.setEditable(false);
 		paydayTotalOutTextField.setPrefWidth(150);
 		paydayTotalOutTextField.setMaxWidth(150);
-		paydayTotalOutTextField.setText(Double.toString(totals[PAYDAY_TOTAL_OUT_INDEX]));
+		paydayTotalOutTextField.setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_OUT_INDEX]*100))/100));
 		
 		TextField paydayTotalLeftTextField = new TextField();
 		paydayTotalLeftTextField.setEditable(false);
 		paydayTotalLeftTextField.setPrefWidth(150);
 		paydayTotalLeftTextField.setMaxWidth(150);
-		paydayTotalLeftTextField.setText(Double.toString(totals[PAYDAY_TOTAL_LEFT_INDEX]));
+		paydayTotalLeftTextField.setText(Double.toString(((double)((int)totals[PAYDAY_TOTAL_LEFT_INDEX]*100))/100));
 
 		vbox.getChildren().add(paydayTotalOutTextField);
 		vbox.getChildren().add(paydayTotalLeftTextField);
@@ -424,7 +463,7 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		try {
 			setBudget(budget);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			HomeBudgetController.showErrorDialog("Error reloading budget after new payee added... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -434,9 +473,31 @@ public class BudgetController  extends VBox implements PayeeAddedListener, Incom
 		try {
 			setBudget(budget);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			HomeBudgetController.showErrorDialog("Error reloading budget after new fund source added... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
+	}	
+
+	public BudgetItem getCurrentBudgetItem() {
+		return currentBudgetItem;
 	}
-	
+
+	public void copyPassword(BudgetItem budgetItem) {
+		String password = budgetItem.getPayee().getPassword();
+
+		javafx.application.Platform.runLater(new BudgetClipboard(password)); 
+    	Platform.runLater(() -> gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())].requestFocus());
+	}
+
+	public void markPaid(BudgetItem budgetItem) {
+		try {
+			budgetItem.setPayed(true);
+			budgetItem.save();
+		} catch (SQLException e) {
+			HomeBudgetController.showErrorDialog("Unable to mark budget item as paid. Error:\n"+e.getMessage());
+		}
+		gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())].setStyle("-fx-control-inner-background: #008000;");; 
+    	Platform.runLater(() -> gridTextFields[paydayToColumn.get(budgetItem.getPayday())][payeeToRow.get(budgetItem.getPayee())].requestFocus());
+    	
+	}
 }

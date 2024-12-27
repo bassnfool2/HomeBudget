@@ -23,7 +23,9 @@ CREATE TABLE "income" (
 	name varchar(100) NOT NULL,
 	budgetedPay NUMERIC, 
 	payFrequency varchar(100), 
-	nextPayDate DATE);
+	nextPayDate DATE,
+	constraint FUNDSOURCE_UK unique ( name )
+);
 	
 -- payee definition
 
@@ -37,7 +39,8 @@ CREATE TABLE "payee" (
 	due_on INTEGER, 
 	balance NUMERIC, 
     income_id int,
-	constraint payee_income_FK foreign key ( income_id ) references "income" (id)
+	constraint payee_income_FK foreign key ( income_id ) references "income" (id),
+	constraint PAYEE_UK unique ( name )
    );
    
 -- payday definition
@@ -49,7 +52,8 @@ CREATE TABLE "payday" (
 	income_id int not null, 
 	payDate DATE, amount float,
 	constraint PAYDAY_INCOME_FK foreign key ( income_id ) references "income",
-	constraint PAYDAY_BUDGET_FK foreign key ( budget_id ) references "budget"
+	constraint PAYDAY_BUDGET_FK foreign key ( budget_id ) references "budget",
+	constraint PAYDAY_UK unique ( budget_id, income_id, paydate )
 );  
 
 -- budgetItem definition
@@ -64,5 +68,6 @@ CREATE TABLE "budgetItem" (
 	payed boolean,
 	payDate DATE, 
 	constraint BUDGETITEM_PAYDAY_FK foreign key ( payday_id ) references "payday",
-	constraint BUDGETITEM_PAYEE_FK foreign key ( payee_id ) references "payee"
+	constraint BUDGETITEM_PAYEE_FK foreign key ( payee_id ) references "payee",
+	constraint BUDGETITEM_UK unique ( payday_id, payee_id )
 );

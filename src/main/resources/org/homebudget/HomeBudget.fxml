@@ -41,6 +41,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -100,6 +101,11 @@
             <Button fx:id="newFileButton" mnemonicParsing="false" onAction="#newFile" text="New" />
             <Button fx:id="saveFileButton" mnemonicParsing="false" onAction="#saveFile" text="Save" />
             <Button fx:id="quitButton" mnemonicParsing="false" onAction="#quit" text="Quit" />
+            <Separator orientation="VERTICAL" />
+            <Button fx:id="payOnlineButton" mnemonicParsing="false" onAction="#payOnline" text="Pay Online" />
+            <Button fx:id="copyUsernameButton" mnemonicParsing="false" onAction="#copyUsername" text="Copy Username" />
+            <Button fx:id="copyPasswordButton" mnemonicParsing="false" onAction="#copyPassword" text="Copy Password" />
+            <Button fx:id="markPaidButton" mnemonicParsing="false" onAction="#markPaid" text="Mark Paid" />
          </children>
          <padding>
             <Insets bottom="4.0" left="4.0" top="4.0" />

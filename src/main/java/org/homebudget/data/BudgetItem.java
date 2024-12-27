@@ -69,16 +69,11 @@ public class BudgetItem {
 		return payed;
 	}
 
-	public void setPayed(boolean payed) {
+	public void setPayed(boolean payed) throws SQLException {
 		this.payed = payed;
 		if ( payed && !prevPaid && this.getPayee().getBalance() != 0) {
 			this.getPayee().setBalance(this.getPayee().getBalance() - amount);
-			try {
-				this.getPayee().save();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			this.getPayee().save();
 		}
 	}
 
@@ -150,6 +145,8 @@ public class BudgetItem {
 			int updated = stmt.executeUpdate();
 			id = DbUtils.getLastGeneratedId(stmt);
 			return updated;
+		} catch ( SQLException e ) {
+			throw new SQLException("Unable to insert budget item: Payday: Fund Source:"+payday.getIncome().getName()+" Date:"+ payday.getDate()+" payee: "+payee.getName()+"\nError: "+e.getMessage(), e);
 		} finally {
 			if ( stmt != null ) try { stmt.close();} catch (Exception e) {};
 		}

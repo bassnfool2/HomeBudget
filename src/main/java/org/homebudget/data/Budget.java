@@ -143,40 +143,52 @@ public class Budget {
 	public static Budget createNextBudget(Date date) throws Exception {
 		Budget budget = null;
 		budget = new Budget(HomeBudgetController.NEW_ADD, date);
-		budget.save();
-		for ( FundSource fundSource : FundSource.getFundSources()) {
-			getFundDrop(fundSource, budget);
-		}
-		for ( Payee payee : Payee.getPayees()) {
-			LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
-			LocalDate nextPayDueDate = budget.getDate().toLocalDate().plusMonths(1).plusDays(payee.getDueOn().getValue()-1);
-			for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
-				Payday payday = budget.getPaydays().get(i);
-				if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
-					if ( payee.getDueOn().equals(PayonEnum.ON_SELECTED_PAYDAY)) {
-						BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
-						budgetItem.save();
-					} else if ( payday.getDate().before(Date.valueOf(payDueDate)) || payday.getDate().equals(Date.valueOf(payDueDate))) {
-						BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
-						budgetItem.save();
-						break;
-					}
-
-				}
+		HomeBudgetController.getDbConnection().setAutoCommit(false);
+		
+		try {
+			budget.save();
+			for ( FundSource fundSource : FundSource.getFundSources()) {
+				getFundDrop(fundSource, budget);
 			}
-			for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
-				Payday payday = budget.getPaydays().get(i);
-				if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
-					if ( payday.getNextPayday().getDate().after(Date.valueOf(nextPayDueDate))) {
-						BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
-						budgetItem.save();
-						break;
+			for ( Payee payee : Payee.getPayees()) {
+				LocalDate payDueDate = budget.getDate().toLocalDate().plusDays(payee.getDueOn().getValue()-1);
+				LocalDate nextPayDueDate = budget.getDate().toLocalDate().plusMonths(1).plusDays(payee.getDueOn().getValue()-1);
+				for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
+					Payday payday = budget.getPaydays().get(i);
+					if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
+						if ( payee.getDueOn().equals(PayonEnum.ON_SELECTED_PAYDAY)) {
+							BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
+							budgetItem.save();
+						} else if ( payday.getDate().before(Date.valueOf(payDueDate)) || payday.getDate().equals(Date.valueOf(payDueDate))) {
+							BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
+							budgetItem.save();
+							break;
+						}
+
 					}
 				}
-
+				for ( int i = budget.getPaydays().size()-1; i>= 0; i--) {
+					if ( payee.getDueOn() == PayonEnum.ON_SELECTED_PAYDAY) {
+						break;
+					} else {
+						Payday payday = budget.getPaydays().get(i);
+						if ( payday.getIncome().equals(payee.getPaywithFundSource())) {
+							if ( payday.getNextPayday().getDate().after(Date.valueOf(nextPayDueDate))) {
+								BudgetItem budgetItem = new BudgetItem(HomeBudgetController.NEW_ADD, payday, payee, payee.getDefaultPaymentAmount(), false, null);
+								budgetItem.save();
+								break;
+							}
+						}
+					}
+				}
 			}
+			addPaymentsDueNextMonthWhichNeedToBePaidThisMonth(budget);
+			HomeBudgetController.getDbConnection().commit();
+			HomeBudgetController.getDbConnection().setAutoCommit(true);
+		} catch (Exception e) {
+			HomeBudgetController.getDbConnection().rollback();
+			throw e;
 		}
-		addPaymentsDueNextMonthWhichNeedToBePaidThisMonth(budget);
 
 		return budget;
 	}

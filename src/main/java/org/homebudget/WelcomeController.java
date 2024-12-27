@@ -49,6 +49,7 @@ public class WelcomeController  extends VBox  {
 			fxmlLoader.load();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return;
 		}
 
 	}
@@ -56,15 +57,17 @@ public class WelcomeController  extends VBox  {
 	
 	public void createBudget() {
 		if ( FundSource.getFundSources().isEmpty()) {
+			HomeBudgetController.showErrorDialog("Unable to create budget... Error: \nNo fund sources defined.");
 			System.out.println("No funding sources");
 		} else if ( Payee.getPayees().isEmpty()) {
+			HomeBudgetController.showErrorDialog("Unable to create budget... Error: \nNo payees defined.");
 			System.out.println("No Payees");			
 		} else {
 			try {
 				Budget budget = Budget.createNextBudget(Date.valueOf(Budget.getStartOfNextMonth()));
 				homeBudgetController.setCurrentBudget(budget);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				HomeBudgetController.showErrorDialog("Unable to create budget... Error:\n"+e.getMessage());
 				e.printStackTrace();
 			}
 		}

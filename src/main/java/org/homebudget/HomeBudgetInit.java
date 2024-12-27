@@ -47,8 +47,11 @@ public class HomeBudgetInit extends Application {
 			primaryStage.setScene(homeBudgetScene);			
 			primaryStage.setMaximized(true);
 			loadConfig(homeBudgetController);
+			homeBudgetController.requestPasswordTextFieldFocus();
 			primaryStage.show();
+			
 		} catch(Exception e) {
+			HomeBudgetController.showErrorDialog("Error starting application... Error:\n"+e.getMessage());
 			e.printStackTrace();
 		}
 	}
